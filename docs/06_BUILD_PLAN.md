@@ -4,7 +4,7 @@ Rule: **cut features, never security.**
 
 ## Phase 0 — Docs & setup (0–2h)
 - [ ] Finish docs 01–05, create GitHub repo, monorepo skeleton, `.gitignore`, `.env.example`
-- [ ] Prisma schema + first migration, MySQL running locally (Docker)
+- [x] Prisma schema + first migration, MySQL running locally
 
 ## Phase 1 — Auth & roles (2–5h)
 - [ ] User model, bcrypt, login/logout/me, JWT cookie

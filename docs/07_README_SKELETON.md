@@ -42,9 +42,7 @@ Problem · Input · Output · Model/API · Workflow · Error handling · Tenant 
 ```bash
 git clone <repo> && cd agencyhub
 cp apps/api/.env.example apps/api/.env
-cp apps/web/.env.example apps/web/.env
-docker compose up -d db
-cd apps/api && npm i && npx prisma migrate dev && npx prisma db seed && npm run dev
+# Ensure MySQL 8 is running locally and database 'agencyhub' is created
 cd apps/web && npm i && npm run dev
 ```
 
