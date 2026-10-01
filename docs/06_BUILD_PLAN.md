@@ -7,10 +7,10 @@ Rule: **cut features, never security.**
 - [x] Prisma schema + first migration, MySQL running locally
 
 ## Phase 1 — Auth & roles (2–5h)
-- [ ] User model, bcrypt, login/logout/me, JWT cookie
-- [ ] `authenticate`, `requireRole`, error handler, zod helper
-- [ ] Seed: super admin + 2 agencies + users
-- [ ] Next.js login page + role-based redirect (/admin, /app, /portal)
+- [x] User model, bcrypt, login/logout/me, JWT cookie
+- [x] `authenticate`, `requireRole`, error handler, zod helper
+- [x] Seed: super admin + 2 agencies + users
+- [x] Next.js login page + role-based redirect (/admin, /app, /portal)
 
 ## Phase 2 — Tenant architecture (5–7h)
 - [ ] `scopedPrisma` extension + repos pattern

@@ -17,10 +17,18 @@ export const metadata: Metadata = {
   robots: { index: false }, // SaaS app — not for search indexing
 };
 
+import { AuthProvider } from '../lib/auth-context';
+import { SupportModeBanner } from '../components/SupportModeBanner';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={inter.variable}>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <AuthProvider>
+          <SupportModeBanner />
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   );
 }

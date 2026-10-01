@@ -5,6 +5,8 @@ import cookieParser from 'cookie-parser';
 import { env } from './config/env';
 import { errorHandler } from './middleware/errorHandler';
 import { logger } from './lib/logger';
+import { authRouter } from './modules/auth/auth.routes';
+import { adminRouter } from './modules/admin/admin.routes';
 
 const app: Express = express();
 
@@ -31,9 +33,14 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ─── API routes (mounted in Phase 1+) ────────────────────────────────────────
-// Routes will be registered here as: app.use('/api/v1', router)
-logger.info('Express app initialized — routes will be added in Phase 1');
+// ─── API routes ───────────────────────────────────────────────────────────────
+const apiRouter = express.Router();
+
+apiRouter.use('/auth', authRouter);
+apiRouter.use('/admin', adminRouter);
+
+app.use('/api/v1', apiRouter);
+logger.info('API routes mounted at /api/v1');
 
 // ─── Central error handler (must be last) ────────────────────────────────────
 app.use(errorHandler);
