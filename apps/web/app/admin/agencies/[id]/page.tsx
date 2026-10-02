@@ -183,10 +183,10 @@ export default function AgencyDetailPage() {
 
   if (isError || !agency) {
     return (
-      <div className="p-12 text-center border border-slate-800 rounded-2xl bg-slate-900/60 space-y-4">
+      <div className="p-12 text-center border border-border rounded-2xl bg-card/60 space-y-4">
         <AlertTriangle className="w-10 h-10 mx-auto text-amber-400" />
         <h2 className="text-lg font-bold text-white">Agency Not Found</h2>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-muted-foreground">
           {(error as any)?.message || 'The requested agency does not exist or has been deleted.'}
         </p>
         <Link href="/admin/agencies">
@@ -207,7 +207,7 @@ export default function AgencyDetailPage() {
       <div>
         <Link
           href="/admin/agencies"
-          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to Agencies List</span>
@@ -215,7 +215,7 @@ export default function AgencyDetailPage() {
       </div>
 
       {/* Main Agency Header Card */}
-      <div className="p-6 sm:p-8 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-2xl relative overflow-hidden">
+      <div className="p-6 sm:p-8 rounded-2xl bg-card/80 border border-border shadow-2xl relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
@@ -227,23 +227,23 @@ export default function AgencyDetailPage() {
                   {agency.name}
                 </h1>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="font-mono text-xs text-slate-400">slug: {agency.slug}</span>
-                  <span className="text-slate-600">·</span>
-                  <span className="text-xs text-slate-400 font-mono">ID: {agency.id}</span>
+                  <span className="font-mono text-xs text-muted-foreground">slug: {agency.slug}</span>
+                  <span className="text-muted-foreground">·</span>
+                  <span className="text-xs text-muted-foreground font-mono">ID: {agency.id}</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 pt-2">
+            <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground pt-2">
               <span className="flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-slate-500" />
+                <Mail className="w-3.5 h-3.5 text-muted-foreground" />
                 {agency.contactEmail}
               </span>
               <span className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
                 Created {new Date(agency.createdAt).toLocaleDateString()}
               </span>
-              <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[11px]">
+              <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground font-mono text-[11px]">
                 Plan: {agency.plan}
               </span>
             </div>
@@ -306,33 +306,33 @@ export default function AgencyDetailPage() {
       {/* Resource Count Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Users */}
-        <div className="p-6 rounded-xl bg-slate-900/60 border border-slate-800">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
+        <div className="p-6 rounded-xl bg-card/60 border border-border">
+          <div className="flex items-center justify-between text-muted-foreground mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider">Total Users</span>
             <Users className="w-5 h-5 text-blue-400" />
           </div>
           <div className="text-3xl font-bold text-white">{agency._count.users}</div>
-          <p className="text-xs text-slate-500 mt-1">Agency admins &amp; collaborators</p>
+          <p className="text-xs text-muted-foreground mt-1">Agency admins &amp; collaborators</p>
         </div>
 
         {/* Clients */}
-        <div className="p-6 rounded-xl bg-slate-900/60 border border-slate-800">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
+        <div className="p-6 rounded-xl bg-card/60 border border-border">
+          <div className="flex items-center justify-between text-muted-foreground mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider">Clients</span>
             <Briefcase className="w-5 h-5 text-indigo-400" />
           </div>
           <div className="text-3xl font-bold text-white">{agency._count.clients}</div>
-          <p className="text-xs text-slate-500 mt-1">External client accounts</p>
+          <p className="text-xs text-muted-foreground mt-1">External client accounts</p>
         </div>
 
         {/* Projects */}
-        <div className="p-6 rounded-xl bg-slate-900/60 border border-slate-800">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
+        <div className="p-6 rounded-xl bg-card/60 border border-border">
+          <div className="flex items-center justify-between text-muted-foreground mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider">Projects</span>
             <FolderKanban className="w-5 h-5 text-pink-400" />
           </div>
           <div className="text-3xl font-bold text-white">{agency._count.projects}</div>
-          <p className="text-xs text-slate-500 mt-1">Active &amp; completed projects</p>
+          <p className="text-xs text-muted-foreground mt-1">Active &amp; completed projects</p>
         </div>
       </div>
 
@@ -352,14 +352,14 @@ export default function AgencyDetailPage() {
 
           <form onSubmit={handleSubmit((data) => suspendMutation.mutate(data))} className="space-y-4">
             <div>
-              <label htmlFor="reason" className="block text-xs font-medium text-slate-300 mb-1.5">
+              <label htmlFor="reason" className="block text-xs font-medium text-muted-foreground mb-1.5">
                 Suspension Reason (Required, min 5 characters)
               </label>
               <Input
                 id="reason"
                 {...register('reason')}
                 placeholder="e.g. Terms violation, non-payment, suspicious activity..."
-                className="bg-slate-950 border-slate-800 text-sm"
+                className="bg-background border-border text-sm"
               />
               {formErrors.reason && (
                 <p className="text-xs text-red-400 mt-1.5">{formErrors.reason.message}</p>

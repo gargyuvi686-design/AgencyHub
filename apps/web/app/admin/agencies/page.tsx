@@ -134,7 +134,7 @@ export default function AgenciesListPage() {
             <Building2 className="w-6 h-6 text-purple-400" />
             <span>Agencies Management</span>
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Search, filter, and inspect tenant workspaces across the platform.
           </p>
         </div>
@@ -144,12 +144,12 @@ export default function AgenciesListPage() {
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         {/* Search Input */}
         <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
+          <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
           <Input
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search by agency name, slug, or email..."
-            className="pl-9 bg-slate-900 border-slate-800"
+            className="pl-9 bg-card border-border"
           />
         </div>
 
@@ -159,7 +159,7 @@ export default function AgenciesListPage() {
             value={statusParam}
             onValueChange={(val) => updateQuery({ status: val, page: '1' })}
           >
-            <SelectTrigger className="bg-slate-900 border-slate-800">
+            <SelectTrigger className="bg-card border-border">
               <SelectValue placeholder="Status: All" />
             </SelectTrigger>
             <SelectContent>
@@ -172,19 +172,19 @@ export default function AgenciesListPage() {
       </div>
 
       {/* Main Table */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden shadow-xl">
+      <div className="rounded-xl border border-border bg-card/60 overflow-hidden shadow-xl">
         {isError ? (
           <div className="p-12 text-center space-y-3">
             <AlertCircle className="w-8 h-8 mx-auto text-red-400" />
             <div className="text-sm font-semibold text-white">Failed to load agencies</div>
-            <div className="text-xs text-slate-400">{(error as any)?.message || 'An error occurred'}</div>
+            <div className="text-xs text-muted-foreground">{(error as any)?.message || 'An error occurred'}</div>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
               Retry
             </Button>
           </div>
         ) : (
           <Table>
-            <TableHeader className="bg-slate-900/90">
+            <TableHeader className="bg-card/90">
               <TableRow>
                 <TableHead>Agency</TableHead>
                 <TableHead>Slug</TableHead>
@@ -214,13 +214,13 @@ export default function AgenciesListPage() {
                 ))
               ) : agencies.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-12 text-slate-500 text-sm">
+                  <TableCell colSpan={9} className="text-center py-12 text-muted-foreground text-sm">
                     No agencies found matching your search criteria.
                   </TableCell>
                 </TableRow>
               ) : (
                 agencies.map((agency) => (
-                  <TableRow key={agency.id} className="group hover:bg-slate-800/40">
+                  <TableRow key={agency.id} className="group hover:bg-muted/40">
                     <TableCell className="font-semibold text-white">
                       <Link
                         href={`/admin/agencies/${agency.id}`}
@@ -229,10 +229,10 @@ export default function AgenciesListPage() {
                         {agency.name}
                       </Link>
                     </TableCell>
-                    <TableCell className="font-mono text-xs text-slate-400">
+                    <TableCell className="font-mono text-xs text-muted-foreground">
                       {agency.slug}
                     </TableCell>
-                    <TableCell className="text-xs text-slate-300">
+                    <TableCell className="text-xs text-muted-foreground">
                       {agency.contactEmail}
                     </TableCell>
                     <TableCell>
@@ -242,22 +242,22 @@ export default function AgenciesListPage() {
                         <Badge variant="danger">SUSPENDED</Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-center text-xs font-mono text-slate-300">
+                    <TableCell className="text-center text-xs font-mono text-muted-foreground">
                       {agency._count.users}
                     </TableCell>
-                    <TableCell className="text-center text-xs font-mono text-slate-300">
+                    <TableCell className="text-center text-xs font-mono text-muted-foreground">
                       {agency._count.clients}
                     </TableCell>
-                    <TableCell className="text-center text-xs font-mono text-slate-300">
+                    <TableCell className="text-center text-xs font-mono text-muted-foreground">
                       {agency._count.projects}
                     </TableCell>
-                    <TableCell className="text-xs text-slate-400 whitespace-nowrap">
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(agency.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-right">
                       <Link
                         href={`/admin/agencies/${agency.id}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md bg-slate-800 hover:bg-purple-600 hover:text-white text-slate-200 transition-colors"
+                        className="inline-flex items-center gap-1 rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
                       >
                         <span>View</span>
                         <ExternalLink className="w-3 h-3" />
@@ -272,7 +272,7 @@ export default function AgenciesListPage() {
 
         {/* Pagination Footer */}
         {!isLoading && !isError && agencies.length > 0 && (
-          <div className="px-4 py-3 border-t border-slate-800/80 bg-slate-900/40 flex items-center justify-between text-xs text-slate-400">
+          <div className="px-4 py-3 border-t border-border/80 bg-card/40 flex items-center justify-between text-xs text-muted-foreground">
             <div>
               Showing <span className="font-semibold text-white">{agencies.length}</span> of{' '}
               <span className="font-semibold text-white">{meta.total}</span> agencies
@@ -284,7 +284,7 @@ export default function AgenciesListPage() {
                 size="sm"
                 disabled={pageParam <= 1}
                 onClick={() => updateQuery({ page: (pageParam - 1).toString() })}
-                className="h-8 px-2 border-slate-800 text-slate-300"
+                className="h-8 px-2 border-border text-muted-foreground"
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Previous
@@ -299,7 +299,7 @@ export default function AgenciesListPage() {
                 size="sm"
                 disabled={pageParam >= totalPages}
                 onClick={() => updateQuery({ page: (pageParam + 1).toString() })}
-                className="h-8 px-2 border-slate-800 text-slate-300"
+                className="h-8 px-2 border-border text-muted-foreground"
               >
                 Next
                 <ChevronRight className="w-4 h-4 ml-1" />

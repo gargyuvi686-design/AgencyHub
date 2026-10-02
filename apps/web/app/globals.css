@@ -2,60 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── shadcn/ui CSS variable design tokens ────────────────────────────────── */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
-    /* Brand accent — indigo-violet gradient system */
-    --brand-50: 238 100% 97%;
-    --brand-500: 238 84% 67%;
-    --brand-600: 243 75% 59%;
-    --brand-900: 244 55% 26%;
+    color-scheme: light;
+    --background: 248 249 251;
+    --foreground: 15 23 42;
+    --card: 255 255 255;
+    --card-foreground: 15 23 42;
+    --popover: 255 255 255;
+    --popover-foreground: 15 23 42;
+    --primary: 79 70 229;
+    --primary-foreground: 255 255 255;
+    --secondary: 241 245 249;
+    --secondary-foreground: 15 23 42;
+    --muted: 241 245 249;
+    --muted-foreground: 100 116 139;
+    --accent: 238 240 255;
+    --accent-foreground: 55 48 163;
+    --destructive: 185 28 28;
+    --destructive-foreground: 255 255 255;
+    --border: 232 234 240;
+    --input: 203 213 225;
+    --ring: 79 70 229;
+    --radius: 1rem;
+    --brand-50: 238 240 255;
+    --brand-500: 99 102 241;
+    --brand-600: 79 70 229;
+    --brand-900: 30 27 75;
+    --portal-primary: 15 148 136;
+    --portal-primary-hover: 13 122 111;
+    --portal-tint: 204 251 241;
+    --emerald-200: 22 101 52;
+    --emerald-300: 22 101 52;
+    --emerald-400: 22 101 52;
+    --emerald-500: 22 163 74;
+    --status-overdue-bg: 254 226 226;
+    --status-overdue-text: 185 28 28;
+    --status-review-bg: 254 243 199;
+    --status-review-text: 146 64 14;
+    --status-progress-bg: 224 231 255;
+    --status-progress-text: 55 48 163;
+    --status-done-bg: 220 252 231;
+    --status-done-text: 22 101 52;
+    --status-neutral-bg: 241 245 249;
+    --status-neutral-text: 71 85 105;
+    --task-todo: 148 163 184;
+    --task-progress: 79 70 229;
+    --task-review: 217 119 6;
+    --task-done: 22 163 74;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-    --brand-50: 238 40% 15%;
-    --brand-500: 238 84% 67%;
-    --brand-600: 243 75% 59%;
-    --brand-900: 244 55% 26%;
+    color-scheme: light;
   }
 }
 
@@ -69,7 +67,120 @@
   }
 }
 
-/* ─── Smooth scrolling ───────────────────────────────────────────────────── */
 html {
   scroll-behavior: smooth;
 }
+
+:focus-visible {
+  outline: 2px solid rgb(var(--ring));
+  outline-offset: 2px;
+}
+
+.login-panel,
+.login-panel .text-white {
+  color: #FFFFFF;
+}
+
+.auth-surface .text-white {
+  color: rgb(var(--foreground));
+}
+
+.auth-surface .bg-indigo-600.text-white {
+  color: #FFFFFF;
+}
+
+.text-amber-200,
+.text-amber-300,
+.text-amber-400 {
+  color: rgb(var(--status-review-text));
+}
+
+.text-rose-200,
+.text-red-200,
+.text-red-300 {
+  color: rgb(var(--status-overdue-text));
+}
+
+.portal-project > section {
+  border: 1px solid rgb(var(--border));
+  border-radius: 16px;
+  background: rgb(var(--card));
+  padding: 1.25rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.app-shell button:not([role='tab']):not([class*='rounded']),
+.admin-shell button:not([class*='rounded']),
+.portal-shell button:not([class*='rounded']) {
+  border-radius: 10px;
+}
+
+[data-theme='portal'] {
+  --primary: var(--portal-primary);
+  --ring: var(--portal-primary);
+  --accent: 204 251 241;
+  --accent-foreground: 15 118 110;
+  --brand-500: var(--portal-primary);
+  --brand-600: var(--portal-primary-hover);
+  --cyan-200: var(--portal-primary);
+  --cyan-300: var(--portal-primary);
+  --cyan-400: var(--portal-primary);
+  --cyan-500: var(--portal-primary);
+  --emerald-200: var(--portal-primary-hover);
+  --emerald-300: var(--portal-primary-hover);
+  --emerald-400: var(--portal-primary);
+  --emerald-500: var(--portal-primary);
+}
+
+.surface-card {
+  border: 1px solid rgb(var(--border));
+  border-radius: 16px;
+  background: rgb(var(--card));
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.progress-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: rgb(var(--portal-tint));
+}
+
+.task-bar-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: rgb(var(--status-progress-bg));
+}
+
+.task-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+}
+
+.task-bar-fill--todo { background: rgb(var(--task-todo)); }
+.task-bar-fill--progress { background: rgb(var(--task-progress)); }
+.task-bar-fill--review { background: rgb(var(--task-review)); }
+.task-bar-fill--done { background: rgb(var(--task-done)); }
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.app-shell .text-white,
+.admin-shell .text-white,
+.portal-shell .text-white {
+  color: rgb(var(--foreground));
+}
+
+.app-shell .bg-indigo-600.text-white,
+.admin-shell .bg-indigo-600.text-white,
+.portal-shell .bg-teal-600.text-white {
+  color: #FFFFFF;
+}
+

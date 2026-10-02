@@ -18,7 +18,7 @@ import Link from 'next/link';
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/agencies', label: 'Agencies', icon: Building2 },
-  { href: '/admin/activity', label: 'Activity Feed', icon: Activity },
+  { href: '/admin/activity', label: 'Activity', icon: Activity },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -39,7 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (isLoading || !user || user.role !== 'SUPER_ADMIN') {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">
+      <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">
         <Loader2 className="w-6 h-6 animate-spin text-purple-400" />
       </div>
     );
@@ -53,18 +53,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row">
+    <div className="admin-shell min-h-screen bg-background text-foreground flex flex-col lg:flex-row">
       {/* Mobile Top Header */}
-      <div className="md:hidden border-b border-slate-800 bg-slate-900/80 px-4 py-3 flex items-center justify-between sticky top-0 z-40">
+      <div className="lg:hidden border-b border-border bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-40">
         <Link href="/admin" className="flex items-center gap-2 font-bold text-white text-base">
           <span className="p-1 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30">
             <Shield className="w-4 h-4" />
           </span>
-          <span>AgencyHub Admin</span>
+          <span>AgencyHub</span>
         </Link>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-1.5 text-slate-400 hover:text-white rounded-md hover:bg-slate-800"
+          className="p-1.5 text-muted-foreground hover:text-white rounded-md hover:bg-muted"
         >
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -74,15 +74,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside
         className={`${
           mobileMenuOpen ? 'block' : 'hidden'
-        } md:block md:w-64 border-r border-slate-800 bg-slate-900/60 backdrop-blur-xl flex flex-col justify-between shrink-0 fixed md:sticky top-0 md:top-0 h-auto md:h-screen z-30`}
+        } lg:block lg:w-[230px] border-r border-border bg-white flex flex-col justify-between shrink-0 fixed lg:sticky top-0 lg:top-0 h-auto lg:h-screen z-30`}
       >
         <div>
           {/* Brand header */}
-          <div className="h-16 px-6 hidden md:flex items-center gap-2.5 border-b border-slate-800/80">
+          <div className="h-16 px-6 hidden lg:flex items-center gap-2.5 border-b border-border/80">
             <span className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400 border border-purple-500/30">
               <Shield className="w-5 h-5" />
             </span>
-            <div className="font-bold text-white tracking-tight text-base">AgencyHub Admin</div>
+            <div className="font-bold text-white tracking-tight text-base">AgencyHub</div>
           </div>
 
           {/* Navigation Links */}
@@ -97,11 +97,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     active
-                      ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-sm'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                      ? 'bg-accent text-accent-foreground border border-indigo-100 shadow-sm'
+                      : 'text-muted-foreground hover:text-white hover:bg-muted/50'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${active ? 'text-purple-400' : 'text-slate-400'}`} />
+                  <Icon className={`w-4 h-4 ${active ? 'text-purple-400' : 'text-muted-foreground'}`} />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -110,7 +110,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* User Card & Sign Out */}
-        <div className="p-4 border-t border-slate-800/80 bg-slate-950/40">
+        <div className="p-4 border-t border-border/80 bg-background/40">
           <div className="flex items-center justify-between gap-3">
             <div className="truncate">
               <div className="text-xs font-semibold text-white truncate">{user.name}</div>
@@ -119,7 +119,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <button
               onClick={() => logout()}
               title="Sign out"
-              className="p-1.5 text-slate-400 hover:text-red-400 rounded-md hover:bg-slate-800/60 transition-colors"
+              className="p-1.5 text-muted-foreground hover:text-red-400 rounded-md hover:bg-muted/60 transition-colors"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -129,7 +129,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1440px] w-full mx-auto">
           {children}
         </main>
       </div>

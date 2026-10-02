@@ -43,24 +43,23 @@ export default function AcceptInvitePage() {
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 py-12 text-slate-100">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-400 via-emerald-300 to-amber-300" />
-      <section className="w-full max-w-md border border-slate-800 bg-slate-900/80 p-6 shadow-2xl sm:p-8">
-        <div className="mb-7 flex h-11 w-11 items-center justify-center border border-emerald-400/30 bg-emerald-400/10 text-emerald-300"><KeyRound className="h-5 w-5" /></div>
+    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12 text-foreground">
+      <section className="auth-surface surface-card w-full max-w-md p-6 sm:p-8">
+        <div className="mb-7 flex h-11 w-11 items-center justify-center rounded-lg bg-green-100 text-green-800"><KeyRound className="h-5 w-5" /></div>
         <p className="text-sm text-emerald-300">Account invitation</p>
         <h1 className="mt-1 text-2xl font-semibold text-white">Finish setting up</h1>
-        <p className="mt-2 text-sm text-slate-400">Choose your name and password to activate access.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Choose your name and password to activate access.</p>
 
         {error && <p role="alert" className="mt-5 flex gap-2 border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-200"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{error}</p>}
         {!token && <p className="mt-5 flex gap-2 border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />Invitation token not found in this link.</p>}
 
         <form onSubmit={acceptInvite} className="mt-6 space-y-4">
-          <label className="block text-sm text-slate-300">Full name<input required minLength={2} autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} className="mt-1.5 h-11 w-full border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-emerald-400" /></label>
-          <label className="block text-sm text-slate-300">Password<input required minLength={8} type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1.5 h-11 w-full border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-emerald-400" /></label>
-          <label className="block text-sm text-slate-300">Confirm password<input required minLength={8} type="password" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} className="mt-1.5 h-11 w-full border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-emerald-400" /></label>
-          <button disabled={busy || !token} className="flex h-11 w-full items-center justify-center gap-2 bg-emerald-300 px-4 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}{busy ? 'Activating…' : 'Accept invitation'}</button>
+          <label className="block text-sm text-muted-foreground">Full name<input required minLength={2} autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} className="mt-1.5 h-11 w-full rounded-lg border border-input bg-white px-3 text-sm text-foreground outline-none focus:border-green-700" /></label>
+          <label className="block text-sm text-muted-foreground">Password<input required minLength={8} type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1.5 h-11 w-full rounded-lg border border-input bg-white px-3 text-sm text-foreground outline-none focus:border-green-700" /></label>
+          <label className="block text-sm text-muted-foreground">Confirm password<input required minLength={8} type="password" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} className="mt-1.5 h-11 w-full rounded-lg border border-input bg-white px-3 text-sm text-foreground outline-none focus:border-green-700" /></label>
+          <button disabled={busy || !token} className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}{busy ? 'Activating…' : 'Accept invitation'}</button>
         </form>
-        <p className="mt-5 text-center text-sm text-slate-400"><Link href="/login" className="text-emerald-300 hover:text-white">Return to sign in</Link></p>
+        <p className="mt-5 text-center text-sm text-muted-foreground"><Link href="/login" className="text-indigo-700 hover:text-indigo-800">Return to sign in</Link></p>
       </section>
     </main>
   );

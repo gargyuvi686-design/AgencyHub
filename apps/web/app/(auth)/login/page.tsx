@@ -104,149 +104,52 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden selection:bg-indigo-500 selection:text-white">
-      {/* Dynamic ambient background glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[450px] bg-gradient-to-tr from-indigo-600/20 via-purple-600/15 to-pink-600/10 rounded-full blur-[120px] pointer-events-none" />
-
-      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-medium mb-3 backdrop-blur-sm">
-          <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-          <span>Multi-Tenant Agency OS</span>
+    <div className="min-h-screen bg-background text-foreground lg:grid lg:grid-cols-[41%_59%]">
+      <section className="login-panel flex min-h-[340px] flex-col justify-between bg-indigo-950 px-7 py-8 text-white sm:px-12 lg:min-h-screen lg:px-[11%] lg:py-10">
+        <Link href="/login" className="flex w-fit items-center gap-3 font-bold text-white">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-500"><Building2 className="h-5 w-5" /></span>
+          <span className="text-lg">AgencyHub</span>
+        </Link>
+        <div className="max-w-md py-10 lg:py-0">
+          <h1 className="text-3xl font-extrabold leading-tight sm:text-4xl">Every project, client and deadline in one calm place.</h1>
+          <p className="mt-5 max-w-sm text-base leading-7 text-indigo-100">A private workspace for your agency and a simple portal for your clients.</p>
+          <ul className="mt-7 space-y-3 text-sm text-indigo-50">
+            <li className="flex gap-3"><CheckCircle2 className="h-5 w-5 shrink-0 text-indigo-300" />Private workspace per agency</li>
+            <li className="flex gap-3"><CheckCircle2 className="h-5 w-5 shrink-0 text-indigo-300" />Client portal with approvals</li>
+            <li className="flex gap-3"><CheckCircle2 className="h-5 w-5 shrink-0 text-indigo-300" />AI meeting summaries to tasks</li>
+          </ul>
         </div>
-        <h2 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-          Sign in to AgencyHub
-        </h2>
-        <p className="mt-2 text-sm text-slate-400">
-          Or{' '}
-          <Link
-            href="/register"
-            className="font-medium text-indigo-400 hover:text-indigo-300 transition-colors underline underline-offset-4"
-          >
-            register a new agency
-          </Link>
-        </p>
-      </div>
+        <p className="hidden text-xs text-indigo-200 lg:block">© AgencyHub</p>
+      </section>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-xl relative z-10 px-4">
-        {/* Demo Account Quick-Fill Palette */}
-        <div className="mb-6 bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-xl p-4 shadow-xl">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Quick-Fill Demo Personas
-            </span>
-            <span className="text-[11px] text-slate-500">1-click credentials</span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <section className="flex min-h-[560px] items-center justify-center px-4 py-10 sm:px-8 lg:min-h-screen">
+        <div className="auth-surface surface-card w-full max-w-[426px] p-6 sm:p-8">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Welcome back</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Sign in to your workspace</p>
+          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+            {errorMsg && <div role="alert" className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /><span>{errorMsg}</span></div>}
+            <div>
+              <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-foreground">Email</label>
+              <div className="relative"><Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><input id="email" name="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@agency.com" className="h-10 w-full rounded-lg border border-input bg-white pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-600" /></div>
+            </div>
+            <div>
+              <label htmlFor="password" className="mb-1.5 block text-sm font-semibold text-foreground">Password</label>
+              <div className="relative"><Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><input id="password" name="password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="h-10 w-full rounded-lg border border-input bg-white pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-600" /></div>
+            </div>
+            <button type="submit" disabled={isSubmitting} className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+              {isSubmitting ? <><Loader2 className="h-4 w-4 animate-spin" />Signing in...</> : <>Sign in<ArrowRight className="h-4 w-4" /></>}
+            </button>
+          </form>
+          <div className="mt-5 text-center text-xs font-medium text-muted-foreground">Demo accounts</div>
+          <div className="mt-2 flex flex-wrap justify-center gap-2">
             {DEMO_ACCOUNTS.map((acc) => {
-              const Icon = acc.icon;
               const isSelected = activeAccountLabel === acc.role;
-              return (
-                <button
-                  key={acc.role}
-                  type="button"
-                  onClick={() => handleSelectDemo(acc)}
-                  className={`flex flex-col items-center text-center p-2.5 rounded-lg border text-xs font-medium transition-all ${
-                    isSelected
-                      ? 'border-indigo-500 bg-indigo-500/15 shadow-sm shadow-indigo-500/20 text-white'
-                      : 'border-slate-800/80 bg-slate-950/40 text-slate-300 hover:border-slate-700 hover:bg-slate-800/50'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 mb-1.5 ${isSelected ? 'text-indigo-400' : 'text-slate-400'}`} />
-                  <span className="font-semibold truncate w-full">{acc.role}</span>
-                  <span className="text-[10px] text-slate-500 truncate w-full mt-0.5">{acc.portal}</span>
-                </button>
-              );
+              return <button key={acc.role} type="button" onClick={() => handleSelectDemo(acc)} aria-pressed={isSelected} className={`rounded-full border px-3 py-2 text-xs font-medium transition-colors ${isSelected ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-input bg-white text-foreground hover:bg-muted'}`}>{acc.role === 'Agency Member' ? 'Member' : acc.role === 'Client Portal' ? 'Client' : acc.role}</button>;
             })}
           </div>
+          <p className="mt-5 text-center text-xs text-muted-foreground">New here? <Link href="/register" className="font-semibold text-indigo-700 underline underline-offset-2">Register your agency</Link></p>
         </div>
-
-        {/* Main Login Card */}
-        <div className="bg-slate-900/80 border border-slate-800 backdrop-blur-xl py-8 px-6 shadow-2xl rounded-2xl sm:px-10">
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            {errorMsg && (
-              <div className="p-3.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm flex items-start gap-2.5 animate-fade-in">
-                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-red-400" />
-                <span>{errorMsg}</span>
-              </div>
-            )}
-
-            <div>
-              <label htmlFor="email" className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1.5">
-                Email address
-              </label>
-              <div className="relative rounded-lg shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                  <Mail className="h-4 w-4" />
-                </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@acme.test"
-                  className="block w-full pl-10 pr-3.5 py-2.5 bg-slate-950/70 border border-slate-800 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="password" className="block text-xs font-medium text-slate-300 uppercase tracking-wider">
-                  Password
-                </label>
-              </div>
-              <div className="relative rounded-lg shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                  <Lock className="h-4 w-4" />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="block w-full pl-10 pr-3.5 py-2.5 bg-slate-950/70 border border-slate-800 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                />
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-transparent rounded-lg shadow-lg shadow-indigo-600/20 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Signing in...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Sign in to Workspace</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-6 pt-6 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              Tenant isolation enforced
-            </span>
-            <span>Password: Password123!</span>
-          </div>
-        </div>
-      </div>
+      </section>
     </div>
   );
 }
