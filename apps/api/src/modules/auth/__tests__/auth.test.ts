@@ -113,9 +113,10 @@ describe('requireRole Middleware', () => {
 });
 
 describe('supportGuard Middleware', () => {
-  it('allows GET requests in support mode', () => {
+  it('allows GET requests in support mode and sets req.effectiveAgencyId', () => {
     const req: any = {
       method: 'GET',
+      user: { role: 'SUPER_ADMIN' },
       support: {
         superAdminId: 's1',
         supportAgencyId: 'a1',
@@ -125,11 +126,13 @@ describe('supportGuard Middleware', () => {
 
     supportGuard(req, {} as any, next);
     expect(next).toHaveBeenCalledWith();
+    expect(req.effectiveAgencyId).toBe('a1');
   });
 
-  it('blocks POST requests in support mode with 403 SUPPORT_MODE_READ_ONLY', () => {
+  it('blocks POST requests in support mode with 403 SUPPORT_READ_ONLY', () => {
     const req: any = {
       method: 'POST',
+      user: { role: 'SUPER_ADMIN' },
       support: {
         superAdminId: 's1',
         supportAgencyId: 'a1',
@@ -137,26 +140,57 @@ describe('supportGuard Middleware', () => {
     };
     const next = vi.fn();
 
-    expect(() => supportGuard(req, {} as any, next)).toThrowError(AppError);
-    try {
-      supportGuard(req, {} as any, next);
-    } catch (err: any) {
-      expect(err.code).toBe('SUPPORT_MODE_READ_ONLY');
-      expect(err.status).toBe(403);
-    }
+    let error: any;
+    expect(() => {
+      try {
+        supportGuard(req, {} as any, next);
+      } catch (err) {
+        error = err;
+        throw err;
+      }
+    }).toThrow(AppError);
+
+    expect(error).toBeDefined();
+    expect(error.code).toBe('SUPPORT_READ_ONLY');
+    expect(error.status).toBe(403);
+    expect(next).not.toHaveBeenCalled();
   });
 
-  it('blocks PATCH and DELETE in support mode', () => {
+  it('blocks PATCH and DELETE in support mode with 403 SUPPORT_READ_ONLY', () => {
     const reqPatch: any = {
       method: 'PATCH',
+      user: { role: 'SUPER_ADMIN' },
       support: { superAdminId: 's1', supportAgencyId: 'a1' },
     };
-    expect(() => supportGuard(reqPatch, {} as any, vi.fn())).toThrowError(AppError);
+    let patchErr: any;
+    expect(() => {
+      try {
+        supportGuard(reqPatch, {} as any, vi.fn());
+      } catch (err) {
+        patchErr = err;
+        throw err;
+      }
+    }).toThrow(AppError);
+    expect(patchErr).toBeDefined();
+    expect(patchErr.code).toBe('SUPPORT_READ_ONLY');
+    expect(patchErr.status).toBe(403);
 
     const reqDelete: any = {
       method: 'DELETE',
+      user: { role: 'SUPER_ADMIN' },
       support: { superAdminId: 's1', supportAgencyId: 'a1' },
     };
-    expect(() => supportGuard(reqDelete, {} as any, vi.fn())).toThrowError(AppError);
+    let deleteErr: any;
+    expect(() => {
+      try {
+        supportGuard(reqDelete, {} as any, vi.fn());
+      } catch (err) {
+        deleteErr = err;
+        throw err;
+      }
+    }).toThrow(AppError);
+    expect(deleteErr).toBeDefined();
+    expect(deleteErr.code).toBe('SUPPORT_READ_ONLY');
+    expect(deleteErr.status).toBe(403);
   });
 });
