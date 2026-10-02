@@ -13,6 +13,7 @@ export interface SupportContext {
   superAdminId: string;
   supportAgencyId: string;
   supportAgencyName?: string;
+  exp?: number;
 }
 
 export interface AgencyContext {

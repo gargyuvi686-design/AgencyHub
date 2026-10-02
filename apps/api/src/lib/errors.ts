@@ -25,6 +25,9 @@ export class AppError extends Error {
  * avoid leaking the existence of resources across tenant boundaries.
  */
 export const Errors = {
+  BAD_REQUEST: (msg = 'Bad request.') =>
+    new AppError('BAD_REQUEST', 400, msg),
+
   UNAUTHORIZED: () =>
     new AppError('UNAUTHORIZED', 401, 'Authentication required.'),
 
@@ -52,7 +55,7 @@ export const Errors = {
    * Support mode guard — returned when support-mode token tries to mutate
    */
   SUPPORT_READ_ONLY: () =>
-    new AppError('SUPPORT_MODE_READ_ONLY', 403, 'Support mode is read-only.'),
+    new AppError('SUPPORT_READ_ONLY', 403, 'Support mode is read-only.'),
 
   AI_NOT_CONFIGURED: () =>
     new AppError(

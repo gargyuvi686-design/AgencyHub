@@ -7,6 +7,9 @@ import { errorHandler } from './middleware/errorHandler';
 import { logger } from './lib/logger';
 import { authRouter } from './modules/auth/auth.routes';
 import { adminRouter } from './modules/admin/admin.routes';
+import { teamRouter } from './modules/team/team.routes';
+import { clientsRouter } from './modules/clients/client.routes';
+import { projectRouter } from './modules/projects/project.routes';
 
 const app: Express = express();
 
@@ -38,6 +41,9 @@ const apiRouter = express.Router();
 
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/admin', adminRouter);
+apiRouter.use('/team', teamRouter);
+apiRouter.use('/clients', clientsRouter);
+apiRouter.use('/projects', projectRouter);
 
 app.use('/api/v1', apiRouter);
 logger.info('API routes mounted at /api/v1');

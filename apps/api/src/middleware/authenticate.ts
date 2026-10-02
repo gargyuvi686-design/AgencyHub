@@ -79,22 +79,15 @@ export async function authenticate(
       if (supportToken) {
         try {
           const supportPayload = verifySupportToken(supportToken);
+          const adminId = supportPayload.superAdminId || supportPayload.sub;
           // Verify that this support token was indeed issued for this Super Admin
-          if (supportPayload.superAdminId === user.id && supportPayload.supportAgencyId) {
+          if (adminId === user.id && supportPayload.supportAgencyId) {
             req.support = {
-              superAdminId: supportPayload.superAdminId,
+              superAdminId: adminId,
               supportAgencyId: supportPayload.supportAgencyId,
               supportAgencyName: supportPayload.supportAgencyName,
+              exp: supportPayload.exp,
             };
-
-            // Admin routes ignore support scoping; workspace routes adopt supportAgencyId
-            const isAdminRoute =
-              req.originalUrl.includes('/api/v1/admin') ||
-              req.path.startsWith('/admin');
-
-            if (!isAdminRoute) {
-              req.effectiveAgencyId = supportPayload.supportAgencyId;
-            }
           }
         } catch (err) {
           logger.warn({ err }, 'Invalid support token encountered; ignoring');

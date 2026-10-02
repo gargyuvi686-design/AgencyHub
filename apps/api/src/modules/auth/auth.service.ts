@@ -115,11 +115,17 @@ export class AuthService {
         select: { id: true, name: true, slug: true, status: true },
       });
 
+      const supportExpiresAt = support.exp
+        ? new Date(support.exp * 1000).toISOString()
+        : undefined;
+
       supportInfo = {
+        isSupportMode: true,
         inSupportMode: true,
         supportAgencyId: support.supportAgencyId,
         supportAgencyName: supportAgency?.name ?? support.supportAgencyName,
         supportAgencySlug: supportAgency?.slug,
+        supportExpiresAt,
       };
     }
 
@@ -135,6 +141,10 @@ export class AuthService {
       },
       agency: user.agency ?? undefined,
       support: supportInfo,
+      isSupportMode: supportInfo ? true : false,
+      supportAgencyId: supportInfo?.supportAgencyId,
+      supportAgencyName: supportInfo?.supportAgencyName,
+      supportExpiresAt: supportInfo?.supportExpiresAt,
     };
   }
 
@@ -234,46 +244,34 @@ export class AuthService {
   }
 
   /**
-   * Accept team invitation and set account password.
-   * Only AGENCY_ADMIN and AGENCY_MEMBER roles are supported.
+   * Accept team / portal-user invitation and set account password.
+   * Supports AGENCY_ADMIN, AGENCY_MEMBER (team) and CLIENT (portal) roles.
+   *
+   * Security:
+   *   - Token is SHA-256 hashed before lookup (raw token never stored).
+   *   - Wrong, expired, or used token → same generic 400 response (no enumeration).
+   *   - agencyId and role come from the INVITATION, never from the request body.
+   *   - clientId comes from the INVITATION for CLIENT-role invites.
    */
   async acceptInvite(input: AcceptInviteInput) {
     const tokenHash = crypto.createHash('sha256').update(input.token.trim()).digest('hex');
+
+    // Generic error for any invalid/expired/used token state
+    const INVALID_ERROR = () => Errors.NOT_FOUND('Invitation');
 
     const invitation = await prisma.invitation.findUnique({
       where: { tokenHash },
       include: {
         agency: {
-          select: {
-            id: true,
-            name: true,
-            status: true,
-          },
+          select: { id: true, name: true, status: true },
         },
       },
     });
 
-    if (!invitation) {
-      throw Errors.VALIDATION('Invalid or expired invitation token.');
-    }
-
-    if (invitation.usedAt) {
-      throw Errors.VALIDATION('This invitation has already been accepted.');
-    }
-
-    if (invitation.expiresAt < new Date()) {
-      throw Errors.VALIDATION('This invitation has expired.');
-    }
-
-    if (invitation.agency.status === AgencyStatus.SUSPENDED) {
-      throw Errors.SUSPENDED();
-    }
-
-    // Role check: only AGENCY_ADMIN / AGENCY_MEMBER allowed
-    const validRoles = ['AGENCY_ADMIN', 'AGENCY_MEMBER'];
-    if (!validRoles.includes(invitation.role)) {
-      throw Errors.FORBIDDEN('Invitations can only be accepted for agency staff roles.');
-    }
+    if (!invitation) throw INVALID_ERROR();
+    if (invitation.usedAt) throw INVALID_ERROR();
+    if (invitation.expiresAt < new Date()) throw INVALID_ERROR();
+    if (invitation.agency.status === AgencyStatus.SUSPENDED) throw Errors.SUSPENDED();
 
     // Check if user with email already exists
     const existingUser = await prisma.user.findUnique({
@@ -289,7 +287,9 @@ export class AuthService {
       const newUser = await tx.user.create({
         data: {
           agencyId: invitation.agencyId,
-          name: invitation.email.split('@')[0],
+          // For CLIENT invites, clientId comes from the invitation
+          clientId: invitation.clientId ?? null,
+          name: input.name.trim(),
           email: invitation.email.toLowerCase(),
           passwordHash: hashedPassword,
           role: invitation.role as UserRole,
@@ -307,7 +307,7 @@ export class AuthService {
           agencyId: invitation.agencyId,
           actorType: ActorType.USER,
           actorId: newUser.id,
-          eventType: 'team.invite_accepted',
+          eventType: 'user.created',
           entityType: 'user',
           entityId: newUser.id,
           visibleToClient: false,
@@ -323,7 +323,7 @@ export class AuthService {
       email: user.email,
       role: user.role,
       agencyId: user.agencyId,
-      clientId: null,
+      clientId: user.clientId,
     });
 
     return {
@@ -333,7 +333,7 @@ export class AuthService {
         name: user.name,
         role: user.role,
         agencyId: user.agencyId,
-        clientId: null,
+        clientId: user.clientId,
       },
       token,
     };

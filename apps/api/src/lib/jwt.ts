@@ -4,7 +4,7 @@ import { env } from '../config/env';
 import { UserRole } from '@prisma/client';
 
 export const AUTH_COOKIE_NAME = 'token';
-export const SUPPORT_COOKIE_NAME = 'support_token';
+export const SUPPORT_COOKIE_NAME = 'ah_support';
 
 export interface TokenPayload {
   userId: string;
@@ -15,10 +15,12 @@ export interface TokenPayload {
 }
 
 export interface SupportTokenPayload {
+  sub?: string;
   superAdminId: string;
   supportAgencyId: string;
   supportAgencyName?: string;
   isSupportMode: true;
+  exp?: number;
 }
 
 /**
@@ -36,11 +38,11 @@ export function getCookieOptions(maxAgeMs: number): CookieOptions {
 }
 
 /**
- * Sign standard user JWT (7 days).
+ * Sign standard user JWT (8 hours).
  */
 export function signAuthToken(payload: TokenPayload): string {
   return jwt.sign(payload, env.JWT_SECRET, {
-    expiresIn: '7d',
+    expiresIn: '8h',
     issuer: 'agencyhub',
     audience: 'agencyhub-app',
   });
@@ -57,22 +59,36 @@ export function verifyAuthToken(token: string): TokenPayload {
 }
 
 /**
- * Sign short-lived support mode JWT (2 hours).
+ * Sign short-lived support mode JWT (30 minutes).
  */
 export function signSupportToken(payload: Omit<SupportTokenPayload, 'isSupportMode'>): string {
-  return jwt.sign({ ...payload, isSupportMode: true }, env.JWT_SECRET, {
-    expiresIn: '2h',
-    issuer: 'agencyhub-support',
-    audience: 'agencyhub-app',
-  });
+  const superAdminId = payload.superAdminId || payload.sub!;
+  return jwt.sign(
+    {
+      ...payload,
+      sub: superAdminId,
+      superAdminId,
+      isSupportMode: true,
+    },
+    env.JWT_SECRET,
+    {
+      expiresIn: '30m',
+      issuer: 'agencyhub-support',
+      audience: 'agencyhub-app',
+    },
+  );
 }
 
 /**
  * Verify support mode JWT.
  */
 export function verifySupportToken(token: string): SupportTokenPayload {
-  return jwt.verify(token, env.JWT_SECRET, {
+  const decoded = jwt.verify(token, env.JWT_SECRET, {
     issuer: 'agencyhub-support',
     audience: 'agencyhub-app',
-  }) as SupportTokenPayload;
+  }) as any;
+  if (!decoded.superAdminId && decoded.sub) {
+    decoded.superAdminId = decoded.sub;
+  }
+  return decoded as SupportTokenPayload;
 }

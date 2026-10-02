@@ -14,11 +14,11 @@ export class AuthController {
     try {
       const { user, agency, token } = await authService.login(req.body);
 
-      // Set 7-day httpOnly session cookie
+      // Set 8-hour httpOnly session cookie
       res.cookie(
         AUTH_COOKIE_NAME,
         token,
-        getCookieOptions(7 * 24 * 60 * 60 * 1000),
+      getCookieOptions(8 * 60 * 60 * 1000), // 8 hours
       );
 
       res.json({
@@ -72,7 +72,7 @@ export class AuthController {
       res.cookie(
         AUTH_COOKIE_NAME,
         token,
-        getCookieOptions(7 * 24 * 60 * 60 * 1000),
+      getCookieOptions(8 * 60 * 60 * 1000), // 8 hours
       );
 
       res.status(201).json({
@@ -96,7 +96,7 @@ export class AuthController {
       res.cookie(
         AUTH_COOKIE_NAME,
         token,
-        getCookieOptions(7 * 24 * 60 * 60 * 1000),
+      getCookieOptions(8 * 60 * 60 * 1000), // 8 hours
       );
 
       res.json({

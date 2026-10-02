@@ -28,6 +28,7 @@ export type RegisterAgencyInput = z.infer<typeof registerAgencySchema>;
 
 export const acceptInviteSchema = z.object({
   token: z.string().trim().min(1, 'Invitation token is required'),
+  name: z.string().trim().min(2, 'Name must be at least 2 characters').max(255),
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters')
