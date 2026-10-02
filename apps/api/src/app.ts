@@ -19,6 +19,7 @@ import { feedbackRouter } from './modules/feedback/feedback.routes';
 import { fileRouter } from './modules/files/file.routes';
 
 const app: Express = express();
+app.set('trust proxy', 1);
 
 // ─── Security headers ─────────────────────────────────────────────────────────
 app.use(helmet());

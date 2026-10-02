@@ -40,3 +40,12 @@ Thumbs.db
 
 # Test coverage
 coverage/
+
+# Next.js generated type file (auto-generated, not for VCS)
+next-env.d.ts
+
+# pnpm
+.pnpm-debug.log
+
+# Vitest cache
+.vitest-cache/
