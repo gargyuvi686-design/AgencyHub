@@ -4,6 +4,10 @@ import { authenticate } from '../../middleware/authenticate';
 import { loadAgencyStatus } from '../../middleware/agencyStatus';
 import { requireRole } from '../../middleware/requireRole';
 import { portalController } from './portal.controller';
+import { feedbackController } from '../feedback/feedback.controller';
+import { createFeedbackCommentSchema, createFeedbackSchema } from '../feedback/feedback.schemas';
+import { validateBody } from '../../middleware/validate';
+import { fileController } from '../files/file.controller';
 
 export const portalRouter: ReturnType<typeof Router> = Router();
 
@@ -16,3 +20,9 @@ portalRouter.get('/overview', (req, res, next) => portalController.overview(req,
 portalRouter.get('/projects', (req, res, next) => portalController.listProjects(req, res, next));
 portalRouter.get('/projects/:id', (req, res, next) => portalController.getProject(req, res, next));
 portalRouter.get('/projects/:id/meetings', (req, res, next) => portalController.listMeetings(req, res, next));
+portalRouter.get('/projects/:id/files', (req, res, next) => fileController.listPortal(req, res, next));
+portalRouter.get('/files/:id/download', (req, res, next) => fileController.downloadPortal(req, res, next));
+portalRouter.get('/projects/:id/feedback', (req, res, next) => feedbackController.listForProject(req, res, next));
+portalRouter.post('/projects/:id/feedback', validateBody(createFeedbackSchema), (req, res, next) => feedbackController.submit(req, res, next));
+portalRouter.get('/feedback/:id/comments', (req, res, next) => feedbackController.listComments(req, res, next));
+portalRouter.post('/feedback/:id/comments', validateBody(createFeedbackCommentSchema), (req, res, next) => feedbackController.addComment(req, res, next));

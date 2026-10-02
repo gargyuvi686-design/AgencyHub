@@ -18,6 +18,10 @@ import { createTaskSchema } from '../tasks/task.schemas';
 import { meetingController } from '../meetings/meeting.controller';
 import { createMeetingSchema } from '../meetings/meeting.schemas';
 import { activityController } from '../activity/activity.controller';
+import { feedbackController } from '../feedback/feedback.controller';
+import { createFeedbackSchema } from '../feedback/feedback.schemas';
+import { fileController } from '../files/file.controller';
+import { receiveProjectFile } from '../files/file-upload';
 
 export const projectRouter: Router = Router();
 
@@ -114,6 +118,33 @@ projectRouter.post(
   requireRole(UserRole.AGENCY_ADMIN, UserRole.AGENCY_MEMBER),
   validateBody(createMeetingSchema),
   (req, res, next) => meetingController.create(req, res, next),
+);
+
+projectRouter.get(
+  '/:id/files',
+  requireRole(UserRole.AGENCY_ADMIN, UserRole.AGENCY_MEMBER),
+  (req, res, next) => fileController.listWorkspace(req, res, next),
+);
+
+projectRouter.post(
+  '/:id/files',
+  requireRole(UserRole.AGENCY_ADMIN, UserRole.AGENCY_MEMBER),
+  receiveProjectFile,
+  (req, res, next) => fileController.uploadWorkspace(req, res, next),
+);
+
+// ── Feedback sub-routes (/projects/:id/feedback) ─────────────────────────────
+projectRouter.get(
+  '/:id/feedback',
+  requireRole(UserRole.AGENCY_ADMIN, UserRole.AGENCY_MEMBER),
+  (req, res, next) => feedbackController.listForProject(req, res, next),
+);
+
+projectRouter.post(
+  '/:id/feedback',
+  requireRole(UserRole.CLIENT),
+  validateBody(createFeedbackSchema),
+  (req, res, next) => feedbackController.submit(req, res, next),
 );
 
 // ── Activity sub-route (/projects/:id/activity) ───────────────────────────────

@@ -15,6 +15,8 @@ import { taskRouter } from './modules/tasks/task.routes';
 import { meetingRouter } from './modules/meetings/meeting.routes';
 import { dashboardRouter, myWorkRouter } from './modules/dashboard/dashboard.routes';
 import { portalRouter } from './modules/portal/portal.routes';
+import { feedbackRouter } from './modules/feedback/feedback.routes';
+import { fileRouter } from './modules/files/file.routes';
 
 const app: Express = express();
 
@@ -49,6 +51,8 @@ apiRouter.use('/portal', portalRouter);
 apiRouter.use('/admin', adminRouter);
 apiRouter.use('/team', teamRouter);
 apiRouter.use('/clients', clientsRouter);
+apiRouter.use('/feedback', feedbackRouter);
+apiRouter.use('/files', fileRouter);
 apiRouter.use('/projects', projectRouter);
 // Standalone resource routes (/milestones/:id, /tasks/:id, /meetings/:id)
 apiRouter.use('/milestones', milestoneRouter);

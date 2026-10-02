@@ -18,6 +18,9 @@ export interface DashboardStats {
   teamMembers: {
     total: number;
   };
+  feedback: {
+    pending: number;
+  };
   recentActivity: any[];
 }
 
@@ -117,6 +120,14 @@ export class DashboardRepository extends BaseRepository {
       },
     });
 
+    const pendingFeedbackCount = await this.db.feedback.count({
+      where: {
+        agencyId: this.agencyId,
+        projectId: projectIds !== undefined ? { in: projectIds } : undefined,
+        status: { in: ['OPEN', 'IN_REVIEW', 'IN_PROGRESS'] },
+      },
+    });
+
     // Client and team stats (admin only, members get zero)
     let totalClients = 0;
     let totalTeamMembers = 0;
@@ -153,6 +164,7 @@ export class DashboardRepository extends BaseRepository {
       },
       clients: { total: totalClients },
       teamMembers: { total: totalTeamMembers },
+      feedback: { pending: pendingFeedbackCount },
       recentActivity,
     };
   }

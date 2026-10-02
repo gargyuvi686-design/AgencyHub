@@ -82,6 +82,15 @@ export class MeetingRepository extends BaseRepository {
     return this.findById(id);
   }
 
+  async saveAiSummary(id: string, aiSummary: Prisma.InputJsonValue): Promise<any> {
+    const result = await this.db.meeting.updateMany({
+      where: { id, agencyId: this.agencyId },
+      data: { aiSummary },
+    });
+    if (result.count === 0) throw Errors.NOT_FOUND('Meeting');
+    return this.findById(id);
+  }
+
   async delete(id: string): Promise<void> {
     const result = await this.db.meeting.deleteMany({
       where: { id, agencyId: this.agencyId },

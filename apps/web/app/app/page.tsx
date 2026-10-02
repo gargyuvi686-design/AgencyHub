@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ArrowUpRight, BriefcaseBusiness, CircleAlert, FolderKanban, Users } from 'lucide-react';
+import { ArrowUpRight, BriefcaseBusiness, CircleAlert, FolderKanban, MessageSquareText, Users } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth-context';
 
@@ -11,6 +11,7 @@ type Dashboard = {
   tasks: { total: number; overdue: number; dueSoon: number };
   clients: { total: number };
   teamMembers: { total: number };
+  feedback: { pending: number };
 };
 
 type Project = { id: string; name: string; status: string; progress: number; client: { companyName: string } };
@@ -41,6 +42,7 @@ export default function AgencyDashboardPage() {
     { label: 'Clients', value: dashboard?.clients.total ?? 0, icon: BriefcaseBusiness, color: 'text-amber-300' },
     { label: 'Team members', value: dashboard?.teamMembers.total ?? 0, icon: Users, color: 'text-emerald-300' },
     { label: 'Open tasks', value: dashboard?.tasks.total ?? 0, icon: CircleAlert, color: 'text-rose-300' },
+    { label: 'Pending feedback', value: dashboard?.feedback.pending ?? 0, icon: MessageSquareText, color: 'text-amber-300' },
   ];
 
   return (

@@ -16,14 +16,14 @@ export class ApiException extends Error {
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const headers = new Headers(options.headers);
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+  if (!isFormData && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
 
   const response = await fetch(url, {
     ...options,
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
   });
 
   const data = await response.json().catch(() => null);
@@ -49,6 +49,9 @@ export const api = {
       body: body !== undefined ? JSON.stringify(body) : undefined,
       ...options,
     }),
+
+  upload: <T>(url: string, body: FormData, options?: RequestInit) =>
+    request<T>(url, { method: 'POST', body, ...options }),
 
   put: <T>(url: string, body?: unknown, options?: RequestInit) =>
     request<T>(url, {

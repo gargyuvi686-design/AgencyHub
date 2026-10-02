@@ -40,8 +40,31 @@ describe('Portal backend isolation', () => {
     const clients = await prisma.client.findMany({ where: { agencyId: agencyA.id } });
     anotherClient = clients.find((c: any) => c.id !== clientA.id) ?? clients[0];
 
+    if (!anotherClient || anotherClient.id === clientA.id) {
+      anotherClient = await prisma.client.create({
+        data: {
+          agencyId: agencyA.id,
+          companyName: 'Portal Isolation Client',
+          contactName: 'Portal Isolation Contact',
+          email: 'portal-isolation-client@example.test',
+        },
+      });
+    }
+
     ownProject = await prisma.project.findFirst({ where: { agencyId: agencyA.id, clientId: clientA.id } });
     otherProject = await prisma.project.findFirst({ where: { agencyId: agencyA.id, clientId: anotherClient.id } });
+
+    const admin = await prisma.user.findUniqueOrThrow({ where: { email: 'admin@acme.test' } });
+    if (!ownProject) {
+      ownProject = await prisma.project.create({
+        data: { agencyId: agencyA.id, clientId: clientA.id, managerId: admin.id, name: 'Portal Own Project Fixture' },
+      });
+    }
+    if (!otherProject) {
+      otherProject = await prisma.project.create({
+        data: { agencyId: agencyA.id, clientId: anotherClient.id, managerId: admin.id, name: 'Portal Other Project Fixture' },
+      });
+    }
 
     clientCookie = await loginAs(clientUserA.email);
   });
