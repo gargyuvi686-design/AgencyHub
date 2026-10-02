@@ -55,21 +55,21 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-7">
-      <header className="border-b border-slate-800 pb-5"><p className="text-sm text-cyan-300">Workspace / Projects</p><h1 className="mt-1 text-3xl font-semibold text-white">Project delivery</h1></header>
+      <header><p className="text-sm text-muted-foreground">Workspace / Projects</p><h1 className="mt-1 text-2xl font-bold tracking-tight text-white">Project delivery</h1></header>
       {readOnly && <p className="border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">Support mode is read-only.</p>}
       {error && <p role="alert" className="border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-200">{error}</p>}
 
-      {canCreate && <form onSubmit={createProject} className="grid gap-3 border-b border-slate-800 pb-6 sm:grid-cols-[1.5fr_1fr_1fr_1fr_auto]">
-        <input required aria-label="Project name" placeholder="Project name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="h-10 border border-slate-700 bg-slate-900 px-3 text-sm text-white placeholder:text-slate-500" />
-        <select required aria-label="Client" value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })} className="h-10 border border-slate-700 bg-slate-900 px-3 text-sm text-white"><option value="">Choose client</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.companyName}</option>)}</select>
-        <select aria-label="Project status" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="h-10 border border-slate-700 bg-slate-900 px-3 text-sm text-white"><option value="PLANNING">Planning</option><option value="ACTIVE">Active</option><option value="ON_HOLD">On hold</option></select>
-        <select aria-label="Project priority" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })} className="h-10 border border-slate-700 bg-slate-900 px-3 text-sm text-white"><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option></select>
-        <button disabled={busy || clients.length === 0} className="inline-flex h-10 items-center justify-center gap-2 bg-cyan-400 px-4 text-sm font-semibold text-slate-950 disabled:opacity-50"><Plus className="h-4 w-4" />{busy ? 'Creating…' : 'Create'}</button>
+      {canCreate && <form onSubmit={createProject} className="surface-card grid gap-3 p-4 sm:grid-cols-[1.5fr_1fr_1fr_1fr_auto]">
+        <input required aria-label="Project name" placeholder="Project name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="h-10 rounded-lg border border-input bg-white px-3 text-sm text-foreground placeholder:text-muted-foreground" />
+        <select required aria-label="Client" value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })} className="h-10 rounded-lg border border-input bg-white px-3 text-sm text-foreground"><option value="">Choose client</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.companyName}</option>)}</select>
+        <select aria-label="Project status" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="h-10 rounded-lg border border-input bg-white px-3 text-sm text-foreground"><option value="PLANNING">Planning</option><option value="ACTIVE">Active</option><option value="ON_HOLD">On hold</option></select>
+        <select aria-label="Project priority" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })} className="h-10 rounded-lg border border-input bg-white px-3 text-sm text-foreground"><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option></select>
+        <button disabled={busy || clients.length === 0} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white disabled:opacity-50"><Plus className="h-4 w-4" />{busy ? 'Creating…' : 'Create'}</button>
       </form>}
 
-      {loading ? <p className="py-8 text-sm text-slate-400">Loading projects…</p> : projects.length === 0 ? <p className="border border-dashed border-slate-700 p-8 text-center text-sm text-slate-400">No projects yet. Add a client before creating a project.</p> : (
-        <div className="divide-y divide-slate-800 border-y border-slate-800">
-          {projects.map((project) => <Link key={project.id} href={`/app/projects/${project.id}`} className="grid gap-3 py-4 transition-colors hover:bg-slate-900/50 sm:grid-cols-[1fr_auto_8rem] sm:items-center sm:px-3"><div><p className="font-medium text-white">{project.name}</p><p className="mt-1 text-xs text-slate-400">{project.client?.companyName} · {project.status.replace('_', ' ').toLowerCase()}</p></div><div className="h-1.5 w-full overflow-hidden rounded bg-slate-800 sm:w-32"><div className="h-full bg-cyan-400" style={{ width: `${project.progress ?? 0}%` }} /></div><p className="text-right text-xs text-slate-400">{project.progress ?? 0}%</p></Link>)}
+      {loading ? <p className="py-8 text-sm text-muted-foreground">Loading projects…</p> : projects.length === 0 ? <p className="surface-card p-8 text-center text-sm text-muted-foreground">No projects yet. Add a client before creating a project.</p> : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {projects.map((project) => <Link key={project.id} href={`/app/projects/${project.id}`} className="surface-card block p-5 transition-colors hover:border-indigo-300"><div className="flex items-start justify-between gap-3"><div><p className="font-semibold text-white">{project.name}</p><p className="mt-1 text-xs text-muted-foreground">{project.client?.companyName} · {project.status.replace('_', ' ').toLowerCase()}</p></div><span className="status-pill bg-green-100 text-green-800">{project.status.replace('_', ' ').toLowerCase()}</span></div><div className="progress-track mt-4 bg-indigo-50"><div className="h-full rounded-full bg-indigo-600" style={{ width: `${project.progress ?? 0}%` }} /></div><p className="mt-2 text-right text-xs text-muted-foreground">{project.progress ?? 0}% complete</p></Link>)}
         </div>
       )}
     </div>

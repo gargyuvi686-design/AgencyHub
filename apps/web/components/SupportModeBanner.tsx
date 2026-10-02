@@ -78,20 +78,20 @@ export function SupportModeBanner() {
   return (
     <div
       role="banner"
-      className="bg-amber-500/15 border-b border-amber-500/30 text-amber-200 px-4 py-2.5 backdrop-blur-md sticky top-0 z-50 transition-all shadow-md"
+      className="sticky top-0 z-50 border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-amber-900 shadow-sm"
     >
       <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-sm">
         <div className="flex items-center gap-2.5 font-medium">
-          <span className="p-1 rounded bg-amber-500/20 text-amber-400">
+          <span className="rounded bg-amber-100 p-1 text-amber-800">
             <ShieldAlert className="w-4 h-4" />
           </span>
           <span>
-            Support mode — viewing <strong className="text-white font-semibold underline decoration-amber-400">{agencyName}</strong> — read-only
+            Support mode — viewing <strong className="font-semibold text-foreground underline decoration-amber-500">{agencyName}</strong> — read-only
           </span>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5 font-mono text-xs px-2.5 py-1 rounded bg-slate-950/40 border border-amber-500/30 text-amber-300">
+          <div className="flex items-center gap-1.5 rounded border border-amber-200 bg-white px-2.5 py-1 font-mono text-xs text-amber-900">
             <Clock className="w-3.5 h-3.5" />
             <span>{formatCountdown(timeLeft)}</span>
           </div>
@@ -99,7 +99,7 @@ export function SupportModeBanner() {
           <button
             onClick={handleExit}
             disabled={isExiting}
-            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md bg-amber-400 hover:bg-amber-300 text-slate-950 transition-colors shadow-sm disabled:opacity-50"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-amber-300 px-3 text-xs font-semibold text-foreground transition-colors hover:bg-amber-400 disabled:opacity-50"
           >
             {isExiting ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />

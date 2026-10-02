@@ -1,14 +1,15 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth-context';
-import { UserCheck, LogOut, Loader2, FolderKanban } from 'lucide-react';
+import { UserCheck, LogOut, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ClientPortalLayout({ children }: { children: React.ReactNode }) {
-  const { user, isLoading, logout } = useAuth();
+  const { user, agency, isLoading, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!isLoading) {
@@ -22,57 +23,28 @@ export default function ClientPortalLayout({ children }: { children: React.React
 
   if (isLoading || !user || user.role !== 'CLIENT') {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">
+      <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">
         <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      {/* Client Portal Header */}
-      <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link href="/portal" className="flex items-center gap-2.5 font-bold text-lg text-white">
-              <span className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                <UserCheck className="w-5 h-5" />
-              </span>
-              <span>Client Portal</span>
-            </Link>
-
-            <nav className="hidden md:flex items-center gap-1 text-sm font-medium text-slate-400">
-              <Link
-                href="/portal"
-                className="px-3 py-1.5 rounded-md hover:text-white hover:bg-slate-800/60 transition-colors flex items-center gap-1.5"
-              >
-                <FolderKanban className="w-4 h-4" />
-                <span>My Projects</span>
-              </Link>
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="text-right hidden sm:block">
-              <div className="text-xs font-semibold text-white">{user.name}</div>
-              <div className="text-[11px] text-emerald-400 font-mono">CLIENT_USER</div>
-            </div>
-
-            <button
-              onClick={() => logout()}
-              title="Sign out"
-              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
+    <div data-theme="portal" className="portal-shell min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-40 border-b border-border bg-white">
+        <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          <Link href="/portal" className="flex min-w-0 items-center gap-2.5 font-bold text-foreground">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-600 text-white"><UserCheck className="h-4 w-4" /></span>
+            <span className="truncate">{agency?.name || 'AgencyHub'}</span>
+          </Link>
+          <nav className="flex items-center gap-1 text-sm font-medium" aria-label="Client portal navigation">
+            <Link href="/portal" aria-current={pathname === '/portal' ? 'page' : undefined} className={`rounded-lg px-3 py-2 ${pathname === '/portal' ? 'text-teal-700' : 'text-muted-foreground hover:bg-muted'}`}>Overview</Link>
+            <Link href="/portal#projects" aria-current={pathname.startsWith('/portal/projects') ? 'page' : undefined} className={`rounded-lg px-3 py-2 ${pathname.startsWith('/portal/projects') ? 'text-teal-700' : 'text-muted-foreground hover:bg-muted'}`}>Projects</Link>
+          </nav>
+          <button onClick={() => logout()} title="Sign out" className="rounded-lg p-2 text-muted-foreground hover:bg-muted" aria-label="Sign out"><LogOut className="h-4 w-4" /></button>
         </div>
       </header>
-
-      {/* Main Client Portal View */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
-      </main>
+      <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
     </div>
   );
 }

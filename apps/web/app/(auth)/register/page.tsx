@@ -67,18 +67,17 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[450px] bg-gradient-to-tr from-indigo-600/20 via-purple-600/15 to-pink-600/10 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-background text-foreground flex flex-col justify-center py-12 sm:px-6 lg:px-8">
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-medium mb-3 backdrop-blur-sm">
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
           <span>New Tenant Setup</span>
         </div>
-        <h2 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+        <h2 className="text-3xl font-extrabold tracking-tight text-foreground">
           Register Your Agency
         </h2>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-2 text-sm text-muted-foreground">
           Already have an account?{' '}
           <Link
             href="/login"
@@ -89,8 +88,8 @@ export default function RegisterPage() {
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg relative z-10 px-4">
-        <div className="bg-slate-900/80 border border-slate-800 backdrop-blur-xl py-8 px-6 shadow-2xl rounded-2xl sm:px-10">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg px-4">
+        <div className="auth-surface surface-card py-8 px-6 sm:px-10">
           <form className="space-y-4" onSubmit={handleSubmit}>
             {errorMsg && (
               <div className="p-3.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm flex items-start gap-2.5">
@@ -100,11 +99,11 @@ export default function RegisterPage() {
             )}
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-medium text-muted-foreground mb-1">
                 Agency Name
               </label>
               <div className="relative rounded-lg shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
                   <Building2 className="h-4 w-4" />
                 </div>
                 <input
@@ -113,17 +112,17 @@ export default function RegisterPage() {
                   value={agencyName}
                   onChange={(e) => handleAgencyNameChange(e.target.value)}
                   placeholder="Vanguard Design Agency"
-                  className="block w-full pl-10 pr-3.5 py-2.5 bg-slate-950/70 border border-slate-800 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="block w-full rounded-lg border border-input bg-white py-2.5 pl-10 pr-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-medium text-muted-foreground mb-1">
                 Workspace Slug
               </label>
               <div className="relative rounded-lg shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
                   <Globe className="h-4 w-4" />
                 </div>
                 <input
@@ -132,18 +131,18 @@ export default function RegisterPage() {
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
                   placeholder="vanguard-design"
-                  className="block w-full pl-10 pr-3.5 py-2.5 bg-slate-950/70 border border-slate-800 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs"
+                  className="block w-full rounded-lg border border-input bg-white py-2.5 pl-10 pr-3.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
                   Owner Name
                 </label>
                 <div className="relative rounded-lg shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
                     <User className="h-4 w-4" />
                   </div>
                   <input
@@ -152,17 +151,17 @@ export default function RegisterPage() {
                     value={ownerName}
                     onChange={(e) => setOwnerName(e.target.value)}
                     placeholder="Jordan Vance"
-                    className="block w-full pl-10 pr-3.5 py-2.5 bg-slate-950/70 border border-slate-800 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="block w-full rounded-lg border border-input bg-white py-2.5 pl-10 pr-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
                   Owner Email
                 </label>
                 <div className="relative rounded-lg shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
                     <Mail className="h-4 w-4" />
                   </div>
                   <input
@@ -171,18 +170,18 @@ export default function RegisterPage() {
                     value={contactEmail}
                     onChange={(e) => setContactEmail(e.target.value)}
                     placeholder="jordan@vanguard.com"
-                    className="block w-full pl-10 pr-3.5 py-2.5 bg-slate-950/70 border border-slate-800 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="block w-full rounded-lg border border-input bg-white py-2.5 pl-10 pr-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-medium text-muted-foreground mb-1">
                 Password (min 8 characters)
               </label>
               <div className="relative rounded-lg shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
                   <Lock className="h-4 w-4" />
                 </div>
                 <input
@@ -192,7 +191,7 @@ export default function RegisterPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="block w-full pl-10 pr-3.5 py-2.5 bg-slate-950/70 border border-slate-800 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="block w-full rounded-lg border border-input bg-white py-2.5 pl-10 pr-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
             </div>
@@ -201,7 +200,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-transparent rounded-lg shadow-lg shadow-indigo-600/20 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-indigo-500 transition-all disabled:opacity-50"
+                className="w-full flex h-10 items-center justify-center gap-2 rounded-lg border border-transparent bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-600/20 transition-all hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-indigo-500 disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>

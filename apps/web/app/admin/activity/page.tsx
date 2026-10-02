@@ -113,7 +113,7 @@ export default function AdminActivityPage() {
             <ActivityIcon className="w-6 h-6 text-purple-400" />
             <span>Platform Activity Feed</span>
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             System-wide audit trail of security, support, and administrative events.
           </p>
         </div>
@@ -124,7 +124,7 @@ export default function AdminActivityPage() {
             value={eventTypeParam}
             onValueChange={(val) => updateQuery({ eventType: val, page: '1' })}
           >
-            <SelectTrigger className="bg-slate-900 border-slate-800">
+            <SelectTrigger className="bg-card border-border">
               <SelectValue placeholder="Event Type: All" />
             </SelectTrigger>
             <SelectContent>
@@ -139,12 +139,12 @@ export default function AdminActivityPage() {
       </div>
 
       {/* Activity Timeline List */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden shadow-xl">
+      <div className="rounded-xl border border-border bg-card/60 overflow-hidden shadow-xl">
         {isError ? (
           <div className="p-12 text-center space-y-3">
             <AlertCircle className="w-8 h-8 mx-auto text-red-400" />
             <div className="text-sm font-semibold text-white">Failed to load activity log</div>
-            <div className="text-xs text-slate-400">
+            <div className="text-xs text-muted-foreground">
               {(error as any)?.message || 'An error occurred'}
             </div>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
@@ -154,7 +154,7 @@ export default function AdminActivityPage() {
         ) : isLoading ? (
           <div className="p-6 space-y-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between py-3 border-b border-slate-800/60">
+              <div key={i} className="flex items-center justify-between py-3 border-b border-border/60">
                 <div className="flex items-center gap-3">
                   <Skeleton className="h-8 w-8 rounded-lg" />
                   <div className="space-y-1">
@@ -167,11 +167,11 @@ export default function AdminActivityPage() {
             ))}
           </div>
         ) : activities.length === 0 ? (
-          <div className="text-center py-16 text-slate-500 text-sm">
+          <div className="text-center py-16 text-muted-foreground text-sm">
             No activity records match the selected criteria.
           </div>
         ) : (
-          <div className="divide-y divide-slate-800/80">
+          <div className="divide-y divide-border/80">
             {activities.map((item) => {
               const isSupportEvent = item.eventType.startsWith('support.');
               const isAgencyEvent = item.eventType.startsWith('agency.');
@@ -179,7 +179,7 @@ export default function AdminActivityPage() {
               return (
                 <div
                   key={item.id}
-                  className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-800/30 transition-colors"
+                  className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-muted/30 transition-colors"
                 >
                   <div className="flex items-start sm:items-center gap-3.5">
                     <span
@@ -188,7 +188,7 @@ export default function AdminActivityPage() {
                           ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                           : isAgencyEvent
                           ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-                          : 'bg-slate-800 text-slate-300 border-slate-700'
+                          : 'bg-muted text-muted-foreground border-input'
                       }`}
                     >
                       {item.actorType === 'SUPER_ADMIN' ? (
@@ -200,7 +200,7 @@ export default function AdminActivityPage() {
 
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-xs font-semibold text-white px-2 py-0.5 rounded bg-slate-800 border border-slate-700">
+                        <span className="font-mono text-xs font-semibold text-white px-2 py-0.5 rounded bg-muted border border-input">
                           {item.eventType}
                         </span>
 
@@ -209,31 +209,31 @@ export default function AdminActivityPage() {
                             href={`/admin/agencies/${item.agency.id}`}
                             className="text-xs text-purple-400 hover:text-purple-300 font-medium inline-flex items-center gap-1"
                           >
-                            <Building2 className="w-3 h-3 text-slate-500" />
+                            <Building2 className="w-3 h-3 text-muted-foreground" />
                             <span>{item.agency.name}</span>
                           </Link>
                         )}
 
-                        <Badge variant="outline" className="text-[10px] text-slate-400">
+                        <Badge variant="outline" className="text-[10px] text-muted-foreground">
                           {item.actorType}
                         </Badge>
                       </div>
 
                       {item.metadata?.superAdminEmail && (
-                        <div className="text-xs text-slate-400 mt-1">
-                          Super Admin: <span className="text-slate-300">{item.metadata.superAdminEmail}</span>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Super Admin: <span className="text-muted-foreground">{item.metadata.superAdminEmail}</span>
                         </div>
                       )}
                       {item.metadata?.reason && (
-                        <div className="text-xs text-slate-400 mt-0.5">
-                          Reason: <span className="text-slate-300 italic">{item.metadata.reason}</span>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          Reason: <span className="text-muted-foreground italic">{item.metadata.reason}</span>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5 text-xs text-slate-400 sm:text-right shrink-0">
-                    <Clock className="w-3.5 h-3.5 text-slate-500" />
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:text-right shrink-0">
+                    <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                     <span>
                       {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
                     </span>
@@ -246,7 +246,7 @@ export default function AdminActivityPage() {
 
         {/* Pagination Footer */}
         {!isLoading && !isError && activities.length > 0 && (
-          <div className="px-4 py-3 border-t border-slate-800/80 bg-slate-900/40 flex items-center justify-between text-xs text-slate-400">
+          <div className="px-4 py-3 border-t border-border/80 bg-card/40 flex items-center justify-between text-xs text-muted-foreground">
             <div>
               Showing <span className="font-semibold text-white">{activities.length}</span> of{' '}
               <span className="font-semibold text-white">{meta.total}</span> events
@@ -258,7 +258,7 @@ export default function AdminActivityPage() {
                 size="sm"
                 disabled={pageParam <= 1}
                 onClick={() => updateQuery({ page: (pageParam - 1).toString() })}
-                className="h-8 px-2 border-slate-800 text-slate-300"
+                className="h-8 px-2 border-border text-muted-foreground"
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Previous
@@ -273,7 +273,7 @@ export default function AdminActivityPage() {
                 size="sm"
                 disabled={pageParam >= totalPages}
                 onClick={() => updateQuery({ page: (pageParam + 1).toString() })}
-                className="h-8 px-2 border-slate-800 text-slate-300"
+                className="h-8 px-2 border-border text-muted-foreground"
               >
                 Next
                 <ChevronRight className="w-4 h-4 ml-1" />
