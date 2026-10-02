@@ -36,11 +36,52 @@ export function createScopedPrisma(agencyId: string, clientId?: string | null) {
           }
           return query(args);
         },
+        async findFirstOrThrow({ model, args, query }) {
+          if (TENANT_MODELS.has(model)) {
+            args.where = { ...args.where, agencyId };
+          }
+          return query(args);
+        },
         async findUnique({ model, args, query }) {
           if (TENANT_MODELS.has(model)) {
             const modelName = model.charAt(0).toLowerCase() + model.slice(1);
+            let whereClause = { ...args.where, agencyId };
+            for (const key of Object.keys(args.where)) {
+              if (
+                args.where[key] &&
+                typeof args.where[key] === 'object' &&
+                !Array.isArray(args.where[key]) &&
+                !(args.where[key] instanceof Date)
+              ) {
+                whereClause = { ...whereClause, ...args.where[key] };
+                delete (whereClause as any)[key];
+              }
+            }
             return (prisma as any)[modelName].findFirst({
-              where: { ...args.where, agencyId },
+              where: whereClause,
+              select: args.select,
+              include: args.include,
+            });
+          }
+          return query(args);
+        },
+        async findUniqueOrThrow({ model, args, query }) {
+          if (TENANT_MODELS.has(model)) {
+            const modelName = model.charAt(0).toLowerCase() + model.slice(1);
+            let whereClause = { ...args.where, agencyId };
+            for (const key of Object.keys(args.where)) {
+              if (
+                args.where[key] &&
+                typeof args.where[key] === 'object' &&
+                !Array.isArray(args.where[key]) &&
+                !(args.where[key] instanceof Date)
+              ) {
+                whereClause = { ...whereClause, ...args.where[key] };
+                delete (whereClause as any)[key];
+              }
+            }
+            return (prisma as any)[modelName].findFirstOrThrow({
+              where: whereClause,
               select: args.select,
               include: args.include,
             });
@@ -82,6 +123,24 @@ export function createScopedPrisma(agencyId: string, clientId?: string | null) {
           }
           return query(args);
         },
+        async update({ model, args, query }) {
+          if (TENANT_MODELS.has(model)) {
+            throw new Error(`Direct update on tenant model ${model} is disabled for isolation safety; use updateMany instead.`);
+          }
+          return query(args);
+        },
+        async delete({ model, args, query }) {
+          if (TENANT_MODELS.has(model)) {
+            throw new Error(`Direct delete on tenant model ${model} is disabled for isolation safety; use deleteMany instead.`);
+          }
+          return query(args);
+        },
+        async upsert({ model, args, query }) {
+          if (TENANT_MODELS.has(model)) {
+            throw new Error(`Direct upsert on tenant model ${model} is disabled for isolation safety; use create/updateMany instead.`);
+          }
+          return query(args);
+        },
         async updateMany({ model, args, query }) {
           if (TENANT_MODELS.has(model)) {
             args.where = { ...args.where, agencyId };
@@ -118,3 +177,6 @@ export function createScopedPrisma(agencyId: string, clientId?: string | null) {
 }
 
 export type ScopedPrismaClient = ReturnType<typeof createScopedPrisma>;
+
+// TODO (Phase 5): Add clientId scoping across tenant queries for CLIENT portal users (scenarios 3, 4, 9).
+

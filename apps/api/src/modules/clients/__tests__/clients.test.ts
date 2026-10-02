@@ -234,7 +234,7 @@ describe('Clients Module Integration Tests', () => {
     });
   });
 
-  describe('POST /api/v1/clients/:id/portal-users & deprecated /invite-user', () => {
+  describe('POST /api/v1/clients/:id/portal-users', () => {
     it('POST /clients/:id/portal-users invites client portal user with role=CLIENT and clientId', async () => {
       const inviteEmail = `portal-user-${Date.now()}@client.com`;
       const res = await request(app)

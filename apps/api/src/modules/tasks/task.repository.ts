@@ -207,13 +207,12 @@ export class TaskRepository extends BaseRepository {
    * Update a task using updateMany scoped by agencyId.
    */
   async update(taskId: string, input: UpdateTaskRepoInput): Promise<any> {
-    const existing = await this.findById(taskId);
-
     if (input.assigneeId) {
       await this.validateAssignee(input.assigneeId);
     }
 
     if (input.milestoneId) {
+      const existing = await this.findById(taskId);
       await this.validateMilestone(input.milestoneId, existing.projectId);
     }
 

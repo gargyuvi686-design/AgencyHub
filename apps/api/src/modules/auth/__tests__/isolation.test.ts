@@ -167,8 +167,13 @@ describe('Isolation — Repository-level cross-tenant enforcement', () => {
 
     const originalTitle = agencyBTask.title;
 
-    // Agency A's repository attempting to update Agency B's task
+    // Agency A's repository attempting to find and update Agency B's task
     const repoA = new TaskRepository(agencyA.id);
+
+    await expect(repoA.findById(agencyBTask.id)).rejects.toMatchObject({
+      status: 404,
+      code: 'NOT_FOUND',
+    });
 
     await expect(
       repoA.update(agencyBTask.id, { title: 'HIJACKED' }),
@@ -180,6 +185,90 @@ describe('Isolation — Repository-level cross-tenant enforcement', () => {
     // Verify the original task was NOT modified
     const unchanged = await prisma.task.findUnique({ where: { id: agencyBTask.id } });
     expect(unchanged?.title).toBe(originalTitle);
+  });
+
+  it('Scenario 2 (HTTP) — Agency A admin GET, PATCH and DELETE on Agency B task returns 404 and row is unchanged', async () => {
+    const agencyACookie = await loginAs(AGENCY_A_EMAIL);
+    const agencyA = await prisma.agency.findUnique({ where: { slug: 'acme-digital' } });
+    const agencyB = await prisma.agency.findUnique({ where: { slug: 'apex-creative' } });
+    const adminB = await prisma.user.findFirst({ where: { agencyId: agencyB!.id, role: 'AGENCY_ADMIN' } });
+    const projectB = await prisma.project.findFirst({ where: { agencyId: agencyB!.id } });
+    const projectA = await prisma.project.findFirst({ where: { agencyId: agencyA!.id } });
+    const adminA = await prisma.user.findFirst({ where: { agencyId: agencyA!.id, role: 'AGENCY_ADMIN' } });
+
+    // 1. Positive control: Agency A admin can GET, PATCH and DELETE their own task
+    const taskA = await prisma.task.create({
+      data: {
+        agencyId: agencyA!.id,
+        projectId: projectA!.id,
+        title: 'Task A to update and delete',
+        status: TaskStatus.TODO,
+        priority: TaskPriority.MEDIUM,
+        createdBy: adminA!.id,
+      },
+    });
+
+    const positiveGetRes = await request(app)
+      .get(`/api/v1/tasks/${taskA.id}`)
+      .set('Cookie', agencyACookie);
+    expect(positiveGetRes.status).toBe(200);
+    expect(positiveGetRes.body.data.id).toBe(taskA.id);
+
+    const positivePatchRes = await request(app)
+      .patch(`/api/v1/tasks/${taskA.id}`)
+      .set('Cookie', agencyACookie)
+      .send({ title: 'Task A Updated Successfully' });
+    expect(positivePatchRes.status).toBe(200);
+    expect(positivePatchRes.body.data.title).toBe('Task A Updated Successfully');
+
+    const positiveDeleteRes = await request(app)
+      .delete(`/api/v1/tasks/${taskA.id}`)
+      .set('Cookie', agencyACookie);
+    expect(positiveDeleteRes.status).toBe(204);
+
+    // 2. Negative isolation check on Agency B's task
+    const taskB = await prisma.task.create({
+      data: {
+        agencyId: agencyB!.id,
+        projectId: projectB!.id,
+        title: 'Task B untouched',
+        status: TaskStatus.TODO,
+        priority: TaskPriority.HIGH,
+        createdBy: adminB!.id,
+      },
+    });
+
+    // Attempt GET cross-agency
+    const getRes = await request(app)
+      .get(`/api/v1/tasks/${taskB.id}`)
+      .set('Cookie', agencyACookie);
+    expect(getRes.status).toBe(404);
+    expect(getRes.body.error?.code).toBe('NOT_FOUND');
+
+    // Attempt PATCH cross-agency
+    const patchRes = await request(app)
+      .patch(`/api/v1/tasks/${taskB.id}`)
+      .set('Cookie', agencyACookie)
+      .send({ title: 'Hacked by A' });
+    expect(patchRes.status).toBe(404);
+    expect(patchRes.body.error?.code).toBe('NOT_FOUND');
+
+    const unchangedAfterPatch = await prisma.task.findUnique({ where: { id: taskB.id } });
+    expect(unchangedAfterPatch?.title).toBe('Task B untouched');
+
+    // Attempt DELETE cross-agency
+    const deleteRes = await request(app)
+      .delete(`/api/v1/tasks/${taskB.id}`)
+      .set('Cookie', agencyACookie);
+    expect(deleteRes.status).toBe(404);
+    expect(deleteRes.body.error?.code).toBe('NOT_FOUND');
+
+    const unchangedAfterDelete = await prisma.task.findUnique({ where: { id: taskB.id } });
+    expect(unchangedAfterDelete).not.toBeNull();
+    expect(unchangedAfterDelete?.title).toBe('Task B untouched');
+
+    // Clean up
+    await prisma.task.delete({ where: { id: taskB.id } });
   });
 });
 

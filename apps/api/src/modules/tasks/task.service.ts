@@ -66,26 +66,30 @@ export class TaskService {
   async getById(ctx: ServiceContext, taskId: string) {
     const repo = new TaskRepository(ctx.agencyId!);
     const task = await repo.findById(taskId);
-    await resolveProjectAccess(ctx, task.projectId);
+    if (ctx.role === 'AGENCY_MEMBER') {
+      await resolveProjectAccess(ctx, task.projectId);
+    }
     return task;
   }
 
   async update(ctx: ServiceContext, taskId: string, input: UpdateTaskInput) {
     const repo = new TaskRepository(ctx.agencyId!);
-    const current = await repo.findById(taskId);
-    const project = await resolveProjectAccess(ctx, current.projectId);
+    if (ctx.role === 'AGENCY_MEMBER') {
+      const current = await repo.findById(taskId);
+      await resolveProjectAccess(ctx, current.projectId);
+    }
 
     const updated = await repo.update(taskId, input);
 
-    if (input.status === TaskStatus.DONE && current.status !== TaskStatus.DONE) {
+    if (input.status === TaskStatus.DONE) {
       await activityService.log({
         ctx,
         eventType: 'task.completed',
         entityType: 'task',
         entityId: taskId,
-        projectId: current.projectId,
+        projectId: updated.projectId,
         visibleToClient: false,
-        metadata: { title: updated.title, projectName: project.name },
+        metadata: { title: updated.title, projectName: updated.project?.name },
       });
     }
 
@@ -94,8 +98,10 @@ export class TaskService {
 
   async delete(ctx: ServiceContext, taskId: string) {
     const repo = new TaskRepository(ctx.agencyId!);
-    const current = await repo.findById(taskId);
-    await resolveProjectAccess(ctx, current.projectId);
+    if (ctx.role === 'AGENCY_MEMBER') {
+      const current = await repo.findById(taskId);
+      await resolveProjectAccess(ctx, current.projectId);
+    }
     await repo.delete(taskId);
   }
 }

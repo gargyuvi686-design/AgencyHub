@@ -98,4 +98,123 @@ describe('ScopedPrisma Client Audit (STEP 1)', () => {
     });
     expect(agg._count.id).toBe(rawCountA);
   });
+
+  it('a create call that passes a different agencyId in data still stores the caller agencyId', async () => {
+    const scopedA = createScopedPrisma(agencyA.id);
+    const createdTask = await scopedA.task.create({
+      data: {
+        agencyId: agencyB.id, // Intentional malicious override
+        projectId: projectA.id,
+        title: 'Tampered Agency Task',
+        status: TaskStatus.TODO,
+        priority: TaskPriority.LOW,
+        createdBy: adminA.id,
+      } as any,
+    });
+    expect(createdTask.agencyId).toBe(agencyA.id);
+
+    // Verify in database
+    const dbRecord = await prisma.task.findUnique({ where: { id: createdTask.id } });
+    expect(dbRecord?.agencyId).toBe(agencyA.id);
+
+    // Clean up
+    await prisma.task.delete({ where: { id: createdTask.id } });
+  });
+
+  it('findFirstOrThrow and findUniqueOrThrow fail closed with throw on cross-agency record', async () => {
+    const scopedA = createScopedPrisma(agencyA.id);
+    const taskB = await prisma.task.findFirst({ where: { agencyId: agencyB.id } });
+
+    await expect(
+      scopedA.task.findFirstOrThrow({ where: { id: taskB!.id } }),
+    ).rejects.toThrow();
+
+    await expect(
+      scopedA.task.findUniqueOrThrow({ where: { id: taskB!.id } as any }),
+    ).rejects.toThrow();
+  });
+
+  it('findUnique with compound unique key (projectId_userId) is scoped to agencyId', async () => {
+    const scopedA = createScopedPrisma(agencyA.id);
+
+    const memberAUser = await prisma.user.findFirstOrThrow({ where: { agencyId: agencyA.id, role: 'AGENCY_MEMBER' } });
+    const memberBUser = await prisma.user.findFirstOrThrow({ where: { agencyId: agencyB.id, role: 'AGENCY_MEMBER' } });
+
+    let pmA = await prisma.projectMember.findFirst({
+      where: { agencyId: agencyA.id },
+    });
+    if (!pmA) {
+      pmA = await prisma.projectMember.create({
+        data: {
+          agencyId: agencyA.id,
+          projectId: projectA.id,
+          userId: memberAUser.id,
+        },
+      });
+    }
+
+    let pmB = await prisma.projectMember.findFirst({
+      where: { agencyId: agencyB.id },
+    });
+    if (!pmB) {
+      pmB = await prisma.projectMember.create({
+        data: {
+          agencyId: agencyB.id,
+          projectId: projectB.id,
+          userId: memberBUser.id,
+        },
+      });
+    }
+
+    // Lookup via scoped client using compound key in Agency A
+    const foundA = await scopedA.projectMember.findUnique({
+      where: {
+        projectId_userId: {
+          projectId: pmA.projectId,
+          userId: pmA.userId,
+        },
+      },
+    });
+    expect(foundA).not.toBeNull();
+    expect(foundA?.agencyId).toBe(agencyA.id);
+
+    // Attempt cross-agency lookup via Agency A's scoped client with Agency B's compound key
+    const crossFound = await scopedA.projectMember.findUnique({
+      where: {
+        projectId_userId: {
+          projectId: pmB.projectId,
+          userId: pmB.userId,
+        },
+      },
+    });
+    expect(crossFound).toBeNull();
+  });
+
+  it('update, delete, and upsert on tenant models fail closed with a clear error', async () => {
+    const scopedA = createScopedPrisma(agencyA.id);
+
+    await expect(
+      scopedA.task.update({
+        where: { id: 'some-task-id' },
+        data: { title: 'New' },
+      } as any),
+    ).rejects.toThrow(/disabled for isolation safety; use updateMany instead/);
+
+    await expect(
+      scopedA.task.delete({
+        where: { id: 'some-task-id' },
+      } as any),
+    ).rejects.toThrow(/disabled for isolation safety; use deleteMany instead/);
+
+    await expect(
+      scopedA.task.upsert({
+        where: { id: 'some-task-id' },
+        create: { title: 'New' },
+        update: { title: 'New' },
+      } as any),
+    ).rejects.toThrow(/disabled for isolation safety; use create\/updateMany instead/);
+  });
+
+  it.todo('Phase 5: clientId scoping enforces client_id partition for CLIENT-role callers (scenarios 3, 4, 9)');
 });
+

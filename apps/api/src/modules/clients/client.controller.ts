@@ -76,7 +76,7 @@ export class ClientController {
   }
 
   /**
-   * POST /clients/:id/invite-user — Invite client user to portal.
+   * POST /clients/:id/portal-users — Invite client user to portal.
    */
   async inviteUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

@@ -60,8 +60,10 @@ describe('ProjectRepository (Unit & Isolation)', () => {
         where: { id: PROJECT_ID, agencyId: AGENCY_A_ID },
         select: expect.any(Object),
       });
-      expect(result).toMatchObject(mockProject);
-      expect(result.progress).toBe(0);
+      expect(result).toEqual({
+        ...mockProject,
+        progress: 0,
+      });
     });
 
     it('Scenario 1 — throws 404 NOT_FOUND when querying a cross-agency project', async () => {

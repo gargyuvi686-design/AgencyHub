@@ -635,8 +635,6 @@ describe('Admin — activity feed', () => {
 // Canonical routes per doc 04:
 //   POST /admin/agencies/:id/support-session  (primary)
 //   POST /admin/support-session/exit           (primary)
-// The alternate forms (POST /admin/support-session, DELETE /admin/support-session)
-// are kept as aliases — deprecated, see admin.routes.ts comments.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('Contract routes — POST /admin/agencies/:id/support-session', () => {
