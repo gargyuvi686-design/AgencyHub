@@ -16,6 +16,75 @@ const TENANT_MODELS = new Set([
   'Invitation',
 ]);
 
+const CLIENT_SCOPED_MODELS = new Set([
+  'User',
+  'Client',
+  'Project',
+  'ProjectMember',
+  'Milestone',
+  'Task',
+  'TaskComment',
+  'Meeting',
+  'Feedback',
+  'FeedbackComment',
+  'File',
+  'ActivityLog',
+  'Invitation',
+]);
+
+function applyScopedWhere(
+  model: string,
+  where: Record<string, any> | undefined,
+  agencyId: string,
+  clientId?: string | null,
+): Record<string, any> {
+  const baseWhere = { ...(where ?? {}), agencyId } as Record<string, any>;
+
+  if (!clientId || !CLIENT_SCOPED_MODELS.has(model)) {
+    return baseWhere;
+  }
+
+  if (model === 'Client') {
+    return { AND: [baseWhere, { id: clientId }] };
+  }
+
+  if (['Project', 'Feedback', 'User', 'Invitation'].includes(model)) {
+    return { ...baseWhere, clientId };
+  }
+
+  if (model === 'FeedbackComment') {
+    return {
+      ...baseWhere,
+      feedback: {
+        ...(baseWhere.feedback ?? {}),
+        clientId,
+      },
+    };
+  }
+
+  if (model === 'TaskComment') {
+    const taskWhere = baseWhere.task ?? {};
+    return {
+      ...baseWhere,
+      task: {
+        ...taskWhere,
+        project: {
+          ...(taskWhere.project ?? {}),
+          clientId,
+        },
+      },
+    };
+  }
+
+  return {
+    ...baseWhere,
+    project: {
+      ...(baseWhere.project ?? {}),
+      clientId,
+    },
+  };
+}
+
 /**
  * Creates a scoped Prisma client that enforces agencyId (and optionally clientId)
  * across all tenant queries.
@@ -26,35 +95,36 @@ export function createScopedPrisma(agencyId: string, clientId?: string | null) {
       $allModels: {
         async findMany({ model, args, query }) {
           if (TENANT_MODELS.has(model)) {
-            args.where = { ...args.where, agencyId };
+            args.where = applyScopedWhere(model, args.where, agencyId, clientId);
           }
           return query(args);
         },
         async findFirst({ model, args, query }) {
           if (TENANT_MODELS.has(model)) {
-            args.where = { ...args.where, agencyId };
+            args.where = applyScopedWhere(model, args.where, agencyId, clientId);
           }
           return query(args);
         },
         async findFirstOrThrow({ model, args, query }) {
           if (TENANT_MODELS.has(model)) {
-            args.where = { ...args.where, agencyId };
+            args.where = applyScopedWhere(model, args.where, agencyId, clientId);
           }
           return query(args);
         },
         async findUnique({ model, args, query }) {
           if (TENANT_MODELS.has(model)) {
             const modelName = model.charAt(0).toLowerCase() + model.slice(1);
-            let whereClause = { ...args.where, agencyId };
-            for (const key of Object.keys(args.where)) {
+            const rawWhere = (args.where ?? {}) as Record<string, any>;
+            let whereClause = applyScopedWhere(model, rawWhere, agencyId, clientId);
+            for (const [key, value] of Object.entries(rawWhere)) {
               if (
-                args.where[key] &&
-                typeof args.where[key] === 'object' &&
-                !Array.isArray(args.where[key]) &&
-                !(args.where[key] instanceof Date)
+                value &&
+                typeof value === 'object' &&
+                !Array.isArray(value) &&
+                !(value instanceof Date)
               ) {
-                whereClause = { ...whereClause, ...args.where[key] };
-                delete (whereClause as any)[key];
+                whereClause = { ...whereClause, ...value };
+                delete (whereClause as Record<string, any>)[key];
               }
             }
             return (prisma as any)[modelName].findFirst({
@@ -68,16 +138,17 @@ export function createScopedPrisma(agencyId: string, clientId?: string | null) {
         async findUniqueOrThrow({ model, args, query }) {
           if (TENANT_MODELS.has(model)) {
             const modelName = model.charAt(0).toLowerCase() + model.slice(1);
-            let whereClause = { ...args.where, agencyId };
-            for (const key of Object.keys(args.where)) {
+            const rawWhere = (args.where ?? {}) as Record<string, any>;
+            let whereClause = applyScopedWhere(model, rawWhere, agencyId, clientId);
+            for (const [key, value] of Object.entries(rawWhere)) {
               if (
-                args.where[key] &&
-                typeof args.where[key] === 'object' &&
-                !Array.isArray(args.where[key]) &&
-                !(args.where[key] instanceof Date)
+                value &&
+                typeof value === 'object' &&
+                !Array.isArray(value) &&
+                !(value instanceof Date)
               ) {
-                whereClause = { ...whereClause, ...args.where[key] };
-                delete (whereClause as any)[key];
+                whereClause = { ...whereClause, ...value };
+                delete (whereClause as Record<string, any>)[key];
               }
             }
             return (prisma as any)[modelName].findFirstOrThrow({
@@ -90,19 +161,19 @@ export function createScopedPrisma(agencyId: string, clientId?: string | null) {
         },
         async count({ model, args, query }) {
           if (TENANT_MODELS.has(model)) {
-            args.where = { ...args.where, agencyId };
+            args.where = applyScopedWhere(model, args.where, agencyId, clientId);
           }
           return query(args);
         },
         async aggregate({ model, args, query }) {
           if (TENANT_MODELS.has(model)) {
-            args.where = { ...args.where, agencyId };
+            args.where = applyScopedWhere(model, args.where, agencyId, clientId);
           }
           return query(args);
         },
         async groupBy({ model, args, query }) {
           if (TENANT_MODELS.has(model)) {
-            args.where = { ...args.where, agencyId };
+            args.where = applyScopedWhere(model, args.where, agencyId, clientId);
           }
           return query(args);
         },
@@ -143,13 +214,13 @@ export function createScopedPrisma(agencyId: string, clientId?: string | null) {
         },
         async updateMany({ model, args, query }) {
           if (TENANT_MODELS.has(model)) {
-            args.where = { ...args.where, agencyId };
+            args.where = applyScopedWhere(model, args.where, agencyId, clientId);
           }
           return query(args);
         },
         async deleteMany({ model, args, query }) {
           if (TENANT_MODELS.has(model)) {
-            args.where = { ...args.where, agencyId };
+            args.where = applyScopedWhere(model, args.where, agencyId, clientId);
           }
           return query(args);
         },
@@ -177,6 +248,4 @@ export function createScopedPrisma(agencyId: string, clientId?: string | null) {
 }
 
 export type ScopedPrismaClient = ReturnType<typeof createScopedPrisma>;
-
-// TODO (Phase 5): Add clientId scoping across tenant queries for CLIENT portal users (scenarios 3, 4, 9).
 

@@ -929,6 +929,46 @@ describe('Phase 4B Full Specification Test Suite (STEP 6)', () => {
       expect(dbMeeting?.title).toBe('Agency B Target Meeting');
     });
 
+    it('does not log task.completed when an already-done task is updated to DONE again', async () => {
+      const task = await prisma.task.create({
+        data: {
+          agencyId: agencyA.id,
+          projectId: projectA.id,
+          title: 'Already Done Task',
+          status: 'DONE',
+          priority: 'LOW',
+          completedAt: new Date(),
+          createdBy: adminA.id,
+        },
+      });
+
+      const before = await prisma.activityLog.count({
+        where: {
+          eventType: 'task.completed',
+          entityType: 'task',
+          entityId: task.id,
+        },
+      });
+
+      const res = await request(app)
+        .patch(`/api/v1/tasks/${task.id}`)
+        .set('Cookie', adminACookie)
+        .send({ status: 'DONE' });
+
+      expect(res.status).toBe(200);
+
+      const after = await prisma.activityLog.count({
+        where: {
+          eventType: 'task.completed',
+          entityType: 'task',
+          entityId: task.id,
+        },
+      });
+
+      expect(after).toBe(before);
+      await prisma.task.delete({ where: { id: task.id } });
+    });
+
     it('completed_at is set on DONE and cleared when leaving DONE', async () => {
       // 1. Create task in TODO -> completedAt is null
       const task = await prisma.task.create({

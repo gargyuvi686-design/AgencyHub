@@ -74,14 +74,15 @@ export class TaskService {
 
   async update(ctx: ServiceContext, taskId: string, input: UpdateTaskInput) {
     const repo = new TaskRepository(ctx.agencyId!);
+    const current = await repo.findById(taskId);
+
     if (ctx.role === 'AGENCY_MEMBER') {
-      const current = await repo.findById(taskId);
       await resolveProjectAccess(ctx, current.projectId);
     }
 
     const updated = await repo.update(taskId, input);
 
-    if (input.status === TaskStatus.DONE) {
+    if (input.status === TaskStatus.DONE && current.status !== TaskStatus.DONE) {
       await activityService.log({
         ctx,
         eventType: 'task.completed',

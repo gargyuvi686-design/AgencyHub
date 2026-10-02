@@ -128,6 +128,29 @@ async function main() {
     },
   });
 
+  const clientAdidas = await prisma.client.create({
+    data: {
+      agencyId: agencyA.id,
+      companyName: 'Adidas Performance',
+      contactName: 'Sofia Chen',
+      email: 'contact@adidas.test',
+      phone: '+1-555-0102',
+      notes: 'Secondary client for cross-client isolation testing.',
+    },
+  });
+
+  const clientUserAdidas = await prisma.user.create({
+    data: {
+      agencyId: agencyA.id,
+      clientId: clientAdidas.id,
+      name: 'Sofia Chen (Client)',
+      email: 'client@adidas.test',
+      passwordHash: defaultPasswordHash,
+      role: UserRole.CLIENT,
+      isActive: true,
+    },
+  });
+
   const projectA = await prisma.project.create({
     data: {
       agencyId: agencyA.id,
@@ -137,6 +160,19 @@ async function main() {
       description: 'Complete overhaul of web & mobile checkout flow.',
       status: ProjectStatus.ACTIVE,
       priority: ProjectPriority.HIGH,
+      startDate: new Date(),
+    },
+  });
+
+  const projectA2 = await prisma.project.create({
+    data: {
+      agencyId: agencyA.id,
+      clientId: clientAdidas.id,
+      managerId: adminA.id,
+      name: 'Retail Media Performance Hub',
+      description: 'Client-specific campaign insights and KPI dashboard.',
+      status: ProjectStatus.PLANNING,
+      priority: ProjectPriority.MEDIUM,
       startDate: new Date(),
     },
   });
@@ -299,6 +335,16 @@ async function main() {
     },
   });
 
+  const clientC = await prisma.client.create({
+    data: {
+      agencyId: agencyC.id,
+      companyName: 'Cedar & Slate Studio',
+      contactName: 'Jordan Lee',
+      email: 'contact@cedarslate.test',
+      phone: '+1-555-0301',
+    },
+  });
+
   await prisma.user.create({
     data: {
       agencyId: agencyC.id,
@@ -306,6 +352,18 @@ async function main() {
       email: 'admin@suspended.test',
       passwordHash: defaultPasswordHash,
       role: UserRole.AGENCY_ADMIN,
+      isActive: true,
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      agencyId: agencyC.id,
+      clientId: clientC.id,
+      name: 'Jordan Lee (Client)',
+      email: 'client@cedarslate.test',
+      passwordHash: defaultPasswordHash,
+      role: UserRole.CLIENT,
       isActive: true,
     },
   });
@@ -319,6 +377,7 @@ async function main() {
   console.log('Client Portal: client@nike.test          (/portal)');
   console.log('Agency B Admin:admin@apex.test           (/app)');
   console.log('Agency B Member:member@apex.test         (/app)');
+  console.log('Agency C Client:client@cedarslate.test    (/portal, suspended agency)');
   console.log('Suspended User:admin@suspended.test      (Blocked with 403)');
   console.log('---------------------------------------------------------');
 }

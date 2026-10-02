@@ -215,6 +215,43 @@ describe('ScopedPrisma Client Audit (STEP 1)', () => {
     ).rejects.toThrow(/disabled for isolation safety; use create\/updateMany instead/);
   });
 
-  it.todo('Phase 5: clientId scoping enforces client_id partition for CLIENT-role callers (scenarios 3, 4, 9)');
+  it('clientId scoping enforces client_id partition for CLIENT-role callers', async () => {
+    const clientA = await prisma.client.findFirst({ where: { agencyId: agencyA.id } });
+    const clientB = await prisma.client.findFirst({ where: { agencyId: agencyA.id, id: { not: clientA!.id } } });
+
+    const scopedClientA = createScopedPrisma(agencyA.id, clientA!.id);
+
+    await expect(
+      scopedClientA.client.findFirst({ where: { id: clientA!.id } }),
+    ).resolves.toMatchObject({ id: clientA!.id });
+    await expect(
+      scopedClientA.client.findFirst({ where: { id: clientB!.id } }),
+    ).resolves.toBeNull();
+
+    const allProjects = await scopedClientA.project.findMany();
+    expect(allProjects.every((project) => project.clientId === clientA!.id)).toBe(true);
+
+    const crossClientProject = await prisma.project.findFirst({ where: { agencyId: agencyA.id, clientId: clientB!.id } });
+    await expect(
+      scopedClientA.project.findFirst({ where: { id: crossClientProject!.id } }),
+    ).resolves.toBeNull();
+
+    const ownProject = await prisma.project.findFirstOrThrow({ where: { agencyId: agencyA.id, clientId: clientA!.id } });
+    const visibleMeeting = await prisma.meeting.create({
+      data: {
+        agencyId: agencyA.id,
+        projectId: ownProject.id,
+        title: 'Scoped client meeting',
+        meetingDate: new Date(),
+        visibleToClient: true,
+        createdBy: adminA.id,
+      },
+    });
+
+    const meetings = await scopedClientA.meeting.findMany({ where: { visibleToClient: true } });
+    expect(meetings.every((meeting) => meeting.projectId === ownProject.id)).toBe(true);
+
+    await prisma.meeting.delete({ where: { id: visibleMeeting.id } });
+  });
 });
 

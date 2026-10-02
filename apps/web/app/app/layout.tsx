@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth-context';
-import { Building2, LogOut, Loader2, LayoutDashboard, Briefcase, Users, FolderKanban } from 'lucide-react';
+import { Building2, LogOut, Loader2, LayoutDashboard, Briefcase, FolderKanban } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AgencyAppLayout({ children }: { children: React.ReactNode }) {
@@ -60,6 +60,8 @@ export default function AgencyAppLayout({ children }: { children: React.ReactNod
                 <LayoutDashboard className="w-4 h-4" />
                 <span>Dashboard</span>
               </Link>
+              <Link href="/app/clients" className="px-3 py-1.5 rounded-md hover:text-white hover:bg-slate-800/60 transition-colors flex items-center gap-1.5"><Briefcase className="w-4 h-4" /><span>Clients</span></Link>
+              <Link href="/app/projects" className="px-3 py-1.5 rounded-md hover:text-white hover:bg-slate-800/60 transition-colors flex items-center gap-1.5"><FolderKanban className="w-4 h-4" /><span>Projects</span></Link>
             </nav>
           </div>
 
@@ -80,6 +82,11 @@ export default function AgencyAppLayout({ children }: { children: React.ReactNod
             </button>
           </div>
         </div>
+        <nav className="md:hidden mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-3 text-xs font-medium text-slate-400" aria-label="Workspace navigation">
+          <Link href="/app" className="whitespace-nowrap px-3 py-2 hover:bg-slate-800/60 hover:text-white">Dashboard</Link>
+          <Link href="/app/clients" className="whitespace-nowrap px-3 py-2 hover:bg-slate-800/60 hover:text-white">Clients</Link>
+          <Link href="/app/projects" className="whitespace-nowrap px-3 py-2 hover:bg-slate-800/60 hover:text-white">Projects</Link>
+        </nav>
       </header>
 
       {/* Main Workspace Body */}

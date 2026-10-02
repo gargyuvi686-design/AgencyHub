@@ -14,6 +14,7 @@ import { milestoneRouter } from './modules/milestones/milestone.routes';
 import { taskRouter } from './modules/tasks/task.routes';
 import { meetingRouter } from './modules/meetings/meeting.routes';
 import { dashboardRouter, myWorkRouter } from './modules/dashboard/dashboard.routes';
+import { portalRouter } from './modules/portal/portal.routes';
 
 const app: Express = express();
 
@@ -44,6 +45,7 @@ app.get('/health', (_req, res) => {
 const apiRouter = express.Router();
 
 apiRouter.use('/auth', authRouter);
+apiRouter.use('/portal', portalRouter);
 apiRouter.use('/admin', adminRouter);
 apiRouter.use('/team', teamRouter);
 apiRouter.use('/clients', clientsRouter);
