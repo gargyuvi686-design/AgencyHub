@@ -10,6 +10,10 @@ import { adminRouter } from './modules/admin/admin.routes';
 import { teamRouter } from './modules/team/team.routes';
 import { clientsRouter } from './modules/clients/client.routes';
 import { projectRouter } from './modules/projects/project.routes';
+import { milestoneRouter } from './modules/milestones/milestone.routes';
+import { taskRouter } from './modules/tasks/task.routes';
+import { meetingRouter } from './modules/meetings/meeting.routes';
+import { dashboardRouter, myWorkRouter } from './modules/dashboard/dashboard.routes';
 
 const app: Express = express();
 
@@ -44,6 +48,13 @@ apiRouter.use('/admin', adminRouter);
 apiRouter.use('/team', teamRouter);
 apiRouter.use('/clients', clientsRouter);
 apiRouter.use('/projects', projectRouter);
+// Standalone resource routes (/milestones/:id, /tasks/:id, /meetings/:id)
+apiRouter.use('/milestones', milestoneRouter);
+apiRouter.use('/tasks', taskRouter);
+apiRouter.use('/meetings', meetingRouter);
+// Dashboard (/dashboard) and My Work (/my-work)
+apiRouter.use('/dashboard', dashboardRouter);
+apiRouter.use('/my-work', myWorkRouter);
 
 app.use('/api/v1', apiRouter);
 logger.info('API routes mounted at /api/v1');

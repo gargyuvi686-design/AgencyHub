@@ -13,6 +13,10 @@ vi.mock('../../../lib/prisma', () => ({
       updateMany: vi.fn(),
       deleteMany: vi.fn(),
     },
+    task: {
+      // needed because findById now calls task.groupBy to compute progress
+      groupBy: vi.fn(),
+    },
     client: {
       findFirst: vi.fn(),
     },
@@ -47,6 +51,8 @@ describe('ProjectRepository (Unit & Isolation)', () => {
         name: 'Website Redesign',
       };
       (prisma.project.findFirst as any).mockResolvedValue(mockProject);
+      // groupBy is called to compute progress; returning [] yields progress = 0
+      (prisma.task.groupBy as any).mockResolvedValue([]);
 
       const result = await repoA.findById(PROJECT_ID);
 
@@ -54,7 +60,8 @@ describe('ProjectRepository (Unit & Isolation)', () => {
         where: { id: PROJECT_ID, agencyId: AGENCY_A_ID },
         select: expect.any(Object),
       });
-      expect(result).toEqual(mockProject);
+      expect(result).toMatchObject(mockProject);
+      expect(result.progress).toBe(0);
     });
 
     it('Scenario 1 — throws 404 NOT_FOUND when querying a cross-agency project', async () => {
@@ -81,6 +88,8 @@ describe('ProjectRepository (Unit & Isolation)', () => {
         agencyId: AGENCY_A_ID,
         name: 'Updated Name',
       });
+      // groupBy needed for progress computation in findById (called after updateMany)
+      (prisma.task.groupBy as any).mockResolvedValue([]);
 
       const updated = await repoA.update(PROJECT_ID, { name: 'Updated Name' });
 

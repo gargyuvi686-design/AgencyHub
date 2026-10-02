@@ -99,10 +99,40 @@ export class ProjectRepository extends BaseRepository {
       where.name = { contains: filters.q };
     }
 
-    return this.paginate<any>(this.db.project, where, pagination, {
+    const result = await this.paginate<any>(this.db.project, where, pagination, {
       select: PROJECT_SELECT,
       orderBy: { createdAt: 'desc' },
     });
+
+    if (result.data.length > 0) {
+      const projectIds = result.data.map((p: any) => p.id);
+      const taskGroups = await this.db.task.groupBy({
+        by: ['projectId', 'status'],
+        where: {
+          projectId: { in: projectIds },
+          agencyId: this.agencyId,
+        },
+        _count: { id: true },
+      });
+
+      const progressByProject = new Map<string, { done: number; nonCancelled: number }>();
+      for (const g of taskGroups) {
+        if (!progressByProject.has(g.projectId)) {
+          progressByProject.set(g.projectId, { done: 0, nonCancelled: 0 });
+        }
+        const stats = progressByProject.get(g.projectId)!;
+        if (g.status === 'DONE') stats.done += g._count.id;
+        if (g.status !== 'CANCELLED') stats.nonCancelled += g._count.id;
+      }
+
+      result.data = result.data.map((p: any) => {
+        const stats = progressByProject.get(p.id);
+        const progress = stats && stats.nonCancelled > 0 ? Math.round((stats.done / stats.nonCancelled) * 100) : 0;
+        return { ...p, progress };
+      });
+    }
+
+    return result;
   }
 
   /**
@@ -148,7 +178,27 @@ export class ProjectRepository extends BaseRepository {
       throw Errors.NOT_FOUND('Project');
     }
 
-    return project;
+    const taskGroups = await this.db.task.groupBy({
+      by: ['status'],
+      where: {
+        projectId,
+        agencyId: this.agencyId,
+      },
+      _count: { id: true },
+    });
+
+    let done = 0;
+    let nonCancelled = 0;
+    for (const g of taskGroups) {
+      if (g.status === 'DONE') done += g._count.id;
+      if (g.status !== 'CANCELLED') nonCancelled += g._count.id;
+    }
+    const progress = nonCancelled > 0 ? Math.round((done / nonCancelled) * 100) : 0;
+
+    return {
+      ...project,
+      progress,
+    };
   }
 
   /**

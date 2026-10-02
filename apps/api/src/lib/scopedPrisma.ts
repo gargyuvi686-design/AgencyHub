@@ -1,28 +1,103 @@
 import { prisma } from './prisma';
 
+const TENANT_MODELS = new Set([
+  'User',
+  'Client',
+  'Project',
+  'ProjectMember',
+  'Milestone',
+  'Task',
+  'TaskComment',
+  'Meeting',
+  'Feedback',
+  'FeedbackComment',
+  'File',
+  'ActivityLog',
+  'Invitation',
+]);
+
 /**
- * Scoped Prisma extension factory.
- *
- * Returns a Prisma extension that augments selected models with a `findScoped`
- * helper that ALWAYS injects `agency_id = agencyId` into queries and optionally
- * `client_id = clientId` for CLIENT-role callers.
- *
- * Tenancy rule (doc 02 §3):
- *   - agency_id comes from the VERIFIED JWT, never the request body/URL.
- *   - Cross-tenant ID miss returns 404, not 403 (avoid leaking existence).
- *
- * @param agencyId  Effective agency ID resolved by authenticate middleware.
- * @param clientId  Optional – set for CLIENT-role callers; scopes to their client record.
+ * Creates a scoped Prisma client that enforces agencyId (and optionally clientId)
+ * across all tenant queries.
  */
 export function createScopedPrisma(agencyId: string, clientId?: string | null) {
   return prisma.$extends({
+    query: {
+      $allModels: {
+        async findMany({ model, args, query }) {
+          if (TENANT_MODELS.has(model)) {
+            args.where = { ...args.where, agencyId };
+          }
+          return query(args);
+        },
+        async findFirst({ model, args, query }) {
+          if (TENANT_MODELS.has(model)) {
+            args.where = { ...args.where, agencyId };
+          }
+          return query(args);
+        },
+        async findUnique({ model, args, query }) {
+          if (TENANT_MODELS.has(model)) {
+            const modelName = model.charAt(0).toLowerCase() + model.slice(1);
+            return (prisma as any)[modelName].findFirst({
+              where: { ...args.where, agencyId },
+              select: args.select,
+              include: args.include,
+            });
+          }
+          return query(args);
+        },
+        async count({ model, args, query }) {
+          if (TENANT_MODELS.has(model)) {
+            args.where = { ...args.where, agencyId };
+          }
+          return query(args);
+        },
+        async aggregate({ model, args, query }) {
+          if (TENANT_MODELS.has(model)) {
+            args.where = { ...args.where, agencyId };
+          }
+          return query(args);
+        },
+        async groupBy({ model, args, query }) {
+          if (TENANT_MODELS.has(model)) {
+            args.where = { ...args.where, agencyId };
+          }
+          return query(args);
+        },
+        async create({ model, args, query }) {
+          if (TENANT_MODELS.has(model)) {
+            // Cast through any to avoid Prisma's strict union types
+            (args.data as any).agencyId = agencyId;
+          }
+          return query(args);
+        },
+        async createMany({ model, args, query }) {
+          if (TENANT_MODELS.has(model)) {
+            if (Array.isArray(args.data)) {
+              args.data = args.data.map((item: any) => ({ ...item, agencyId }));
+            } else if (args.data) {
+              args.data = { ...(args.data as any), agencyId };
+            }
+          }
+          return query(args);
+        },
+        async updateMany({ model, args, query }) {
+          if (TENANT_MODELS.has(model)) {
+            args.where = { ...args.where, agencyId };
+          }
+          return query(args);
+        },
+        async deleteMany({ model, args, query }) {
+          if (TENANT_MODELS.has(model)) {
+            args.where = { ...args.where, agencyId };
+          }
+          return query(args);
+        },
+      },
+    },
     model: {
       $allModels: {
-        /**
-         * Find a single record, asserting it belongs to this tenant.
-         * Equivalent to: WHERE id = ? AND agency_id = ? (AND client_id = ? for clients)
-         * Returns null instead of throwing – callers convert to 404.
-         */
         async findScoped<T>(
           this: T,
           args: { id: string; clientId?: string | null },
@@ -32,12 +107,9 @@ export function createScopedPrisma(agencyId: string, clientId?: string | null) {
             id: args.id,
             agencyId,
           };
-
-          // For CLIENT-role requests, additionally scope by clientId when provided
           if (clientId && args.clientId !== undefined) {
             where.clientId = clientId;
           }
-
           return ctx.findFirst({ where });
         },
       },
@@ -45,7 +117,4 @@ export function createScopedPrisma(agencyId: string, clientId?: string | null) {
   });
 }
 
-/**
- * Convenience type for scoped Prisma clients.
- */
 export type ScopedPrismaClient = ReturnType<typeof createScopedPrisma>;

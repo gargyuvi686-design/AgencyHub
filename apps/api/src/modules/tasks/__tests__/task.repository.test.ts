@@ -47,7 +47,10 @@ describe('TaskRepository (Unit & Isolation)', () => {
         where: { id: TASK_ID, agencyId: AGENCY_A_ID },
         select: expect.any(Object),
       });
-      expect(res).toEqual(mockTask);
+      expect(res).toMatchObject(mockTask);
+      // computeTaskDerivedFields appends isOverdue/isDueSoon (false when dueDate is absent)
+      expect(res.isOverdue).toBe(false);
+      expect(res.isDueSoon).toBe(false);
     });
 
     it('throws 404 when task belongs to another agency', async () => {

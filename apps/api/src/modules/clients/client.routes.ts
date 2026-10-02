@@ -59,6 +59,26 @@ clientsRouter.post(
 
 
 
+clientsRouter.get(
+  '/:id/activity',
+  requireRole(UserRole.AGENCY_ADMIN, UserRole.AGENCY_MEMBER),
+  async (req, res, next) => {
+    try {
+      const { activityService } = await import('../activity/activity.service');
+      const ctx = {
+        userId: req.user!.userId,
+        role: req.user!.role,
+        agencyId: req.effectiveAgencyId ?? req.user!.agencyId ?? null,
+        clientId: req.user!.clientId ?? null,
+      };
+      const result = await activityService.listForClient(ctx, req.params.id, req.query as any);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 clientsRouter.delete(
   '/:id',
   requireRole(UserRole.AGENCY_ADMIN),

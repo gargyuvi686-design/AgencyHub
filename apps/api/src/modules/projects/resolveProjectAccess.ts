@@ -51,8 +51,26 @@ export async function resolveProjectAccess(ctx: ServiceContext, projectId: strin
     throw Errors.NOT_FOUND('Project');
   }
 
+  const taskGroups = await prisma.task.groupBy({
+    by: ['status'],
+    where: {
+      projectId,
+      agencyId: ctx.agencyId,
+    },
+    _count: { id: true },
+  });
+
+  let done = 0;
+  let nonCancelled = 0;
+  for (const g of taskGroups) {
+    if (g.status === 'DONE') done += g._count.id;
+    if (g.status !== 'CANCELLED') nonCancelled += g._count.id;
+  }
+  const progress = nonCancelled > 0 ? Math.round((done / nonCancelled) * 100) : 0;
+  const projectWithProgress = { ...project, progress };
+
   if (ctx.role === 'AGENCY_ADMIN' || ctx.role === 'SUPER_ADMIN') {
-    return project;
+    return projectWithProgress;
   }
 
   if (ctx.role === 'AGENCY_MEMBER') {
@@ -63,14 +81,14 @@ export async function resolveProjectAccess(ctx: ServiceContext, projectId: strin
     if (!isAssigned) {
       throw Errors.NOT_FOUND('Project');
     }
-    return project;
+    return projectWithProgress;
   }
 
   if (ctx.role === 'CLIENT') {
     if (!ctx.clientId || project.clientId !== ctx.clientId) {
       throw Errors.NOT_FOUND('Project');
     }
-    return project;
+    return projectWithProgress;
   }
 
   throw Errors.NOT_FOUND('Project');
