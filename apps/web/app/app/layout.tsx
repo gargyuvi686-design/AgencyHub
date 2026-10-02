@@ -18,9 +18,11 @@ export default function AgencyAppLayout({ children }: { children: React.ReactNod
         const isAgencyUser =
           user.role === 'AGENCY_ADMIN' || user.role === 'AGENCY_MEMBER';
         const isSuperAdminInSupport =
-          user.role === 'SUPER_ADMIN' && support?.inSupportMode;
+          user.role === 'SUPER_ADMIN' && (support?.inSupportMode || (support as any)?.isSupportMode);
 
-        if (!isAgencyUser && !isSuperAdminInSupport) {
+        if (user.role === 'SUPER_ADMIN' && !isSuperAdminInSupport) {
+          router.push('/admin');
+        } else if (!isAgencyUser && !isSuperAdminInSupport) {
           router.push('/login');
         }
       }

@@ -25,9 +25,11 @@ export interface Agency {
 
 export interface SupportContextInfo {
   inSupportMode: boolean;
+  isSupportMode?: boolean;
   supportAgencyId?: string;
   supportAgencyName?: string;
   supportAgencySlug?: string;
+  supportExpiresAt?: string;
 }
 
 interface AuthContextType {

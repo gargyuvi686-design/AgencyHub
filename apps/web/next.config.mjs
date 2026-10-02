@@ -1,6 +1,5 @@
-import type { NextConfig } from 'next';
-
-const config: NextConfig = {
+/** @type {import('next').NextConfig} */
+const config = {
   /**
    * Rewrite all /api/* requests to the Express backend.
    *
