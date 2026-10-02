@@ -93,10 +93,12 @@ enum ActorType {
   SUPER_ADMIN
 }
 
-// Invite tokens are only for agency team members (not clients, not super admins)
+// Invite tokens cover agency staff AND client portal users.
+// CLIENT role is used when an agency admin invites a portal user.
 enum InvitationRole {
   AGENCY_ADMIN
   AGENCY_MEMBER
+  CLIENT
 }
 
 // ─── Core tenant model ───────────────────────────────────────────────────────
@@ -456,22 +458,28 @@ model ActivityLog {
 }
 
 // ─── Team invitations ─────────────────────────────────────────────────────────
-// Tokens are random UUIDs stored as bcrypt hash; raw token returned once in response.
-// Only AGENCY_ADMIN and AGENCY_MEMBER roles can be invited (not CLIENT, not SUPER_ADMIN).
+// Tokens are random 32-byte hex strings stored as SHA-256 hash; raw token returned
+// once in response. 7-day expiry, single use.
+// Roles: AGENCY_ADMIN, AGENCY_MEMBER (team invite) or CLIENT (portal user invite).
 
 model Invitation {
   id        String         @id @default(uuid()) @db.Char(36)
   agencyId  String         @map("agency_id") @db.Char(36)
   email     String         @db.VarChar(255)
   role      InvitationRole
-  // bcrypt hash of the raw token — never stored in plaintext
-  tokenHash String         @unique @map("token_hash") @db.VarChar(255)
+  // Nullable: set only for CLIENT-role invitations; identifies which client company
+  clientId  String?        @map("client_id") @db.Char(36)
+  // SHA-256 hex hash of the raw token — never stored in plaintext
+  tokenHash String         @unique @map("token_hash") @db.VarChar(64)
   expiresAt DateTime       @map("expires_at")
   usedAt    DateTime?      @map("used_at")
+  // Raw user ID of the agency admin who sent the invite
+  createdBy String         @map("created_by") @db.Char(36)
   createdAt DateTime       @default(now()) @map("created_at")
 
   agency Agency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
 
   @@index([agencyId])
+  @@index([email])
   @@map("invitations")
 }

@@ -9,24 +9,49 @@ async function hash(pwd: string): Promise<string> {
 }
 
 async function main() {
+  // ── Seed guard ──────────────────────────────────────────────────────────────
+  // Wipe is only allowed when:
+  //   (a) DATABASE_URL points at a database whose name ends in "_test", OR
+  //   (b) ALLOW_SEED_WIPE=true is explicitly set (for first-time production seed)
+  // Any other case: if data already exists we abort to prevent data loss.
+  const rawUrl = process.env.DATABASE_URL ?? '';
+  const dbName = rawUrl
+    .replace(/^[^/]+\/\/[^/]+\//, '') // strip scheme + host
+    .split('?')[0]; // drop query-string
+  const isTestDb = dbName.endsWith('_test');
+  const allowWipe = isTestDb || process.env.ALLOW_SEED_WIPE === 'true';
+
+  if (!allowWipe) {
+    // Check if any agencies already exist — refuse to continue if they do
+    const existingCount = await prisma.agency.count();
+    if (existingCount > 0) {
+      throw new Error(
+        `[seed] SAFETY: Database "${dbName}" already contains ${existingCount} agencies. ` +
+          'Set ALLOW_SEED_WIPE=true or use a *_test database to force a re-seed.',
+      );
+    }
+  }
+
   console.log('🌱 Starting database seed...');
 
   // ─── Clean up existing records (reverse dependency order) ───────────────────
-  console.log('Cleaning up existing data...');
-  await prisma.activityLog.deleteMany();
-  await prisma.feedbackComment.deleteMany();
-  await prisma.feedback.deleteMany();
-  await prisma.taskComment.deleteMany();
-  await prisma.task.deleteMany();
-  await prisma.milestone.deleteMany();
-  await prisma.meeting.deleteMany();
-  await prisma.file.deleteMany();
-  await prisma.projectMember.deleteMany();
-  await prisma.project.deleteMany();
-  await prisma.invitation.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.client.deleteMany();
-  await prisma.agency.deleteMany();
+  if (allowWipe) {
+    console.log('Cleaning up existing data...');
+    await prisma.activityLog.deleteMany();
+    await prisma.feedbackComment.deleteMany();
+    await prisma.feedback.deleteMany();
+    await prisma.taskComment.deleteMany();
+    await prisma.task.deleteMany();
+    await prisma.milestone.deleteMany();
+    await prisma.meeting.deleteMany();
+    await prisma.file.deleteMany();
+    await prisma.projectMember.deleteMany();
+    await prisma.project.deleteMany();
+    await prisma.invitation.deleteMany();
+    await prisma.user.deleteMany();
+    await prisma.client.deleteMany();
+    await prisma.agency.deleteMany();
+  }
 
   const defaultPasswordHash = await hash('Password123!');
 
@@ -153,9 +178,8 @@ async function main() {
         title: 'User interview synthesis',
         status: TaskStatus.DONE,
         priority: TaskPriority.HIGH,
-        createdById: adminA.id,
+        createdBy: adminA.id,
         assigneeId: memberA.id,
-        sortOrder: 1,
       },
       {
         agencyId: agencyA.id,
@@ -164,9 +188,8 @@ async function main() {
         title: 'Checkout flow responsive Figma screens',
         status: TaskStatus.IN_PROGRESS,
         priority: TaskPriority.URGENT,
-        createdById: adminA.id,
+        createdBy: adminA.id,
         assigneeId: memberA.id,
-        sortOrder: 2,
       },
     ],
   });
@@ -247,6 +270,18 @@ async function main() {
       agencyId: agencyB.id,
       projectId: projectB.id,
       userId: memberB.id,
+    },
+  });
+
+  await prisma.task.create({
+    data: {
+      agencyId: agencyB.id,
+      projectId: projectB.id,
+      title: 'Setup Spotify Audio Ingestion Pipeline',
+      status: TaskStatus.IN_PROGRESS,
+      priority: TaskPriority.HIGH,
+      createdBy: adminB.id,
+      assigneeId: memberB.id,
     },
   });
 
