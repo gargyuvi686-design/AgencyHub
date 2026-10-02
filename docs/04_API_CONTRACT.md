@@ -29,15 +29,15 @@ List endpoints: `?page=&limit=&q=&status=` → `{ data: [], meta: { page, limit,
 |---|---|---|---|
 | GET | /dashboard | ✓ | ✓ (own scope) |
 | GET | /my-work | ✓ | ✓ |
-| GET/POST | /team | ✓ | — |
+| GET | /team | ✓ | — (POST /team removed; POST /team/invite + /auth/accept-invite are the only way to add users) |
 | PATCH/DELETE | /team/:userId | ✓ | — |
 | POST | /team/invite | ✓ | — |
 | GET/POST | /clients | ✓ | read |
-| GET/PATCH/DELETE | /clients/:id | ✓ | read |
+| GET/PATCH/DELETE | /clients/:id | ✓ | read (DELETE returns 409 if client has ANY project) |
 | POST | /clients/:id/portal-users | ✓ | — |
 | GET/POST | /projects | ✓ | read assigned |
 | GET/PATCH/DELETE | /projects/:id | ✓ | read/limited |
-| PUT | /projects/:id/members | ✓ | — |
+| PUT | /projects/:id/members | ✓ | — (transactional full replace; active agency users only) |
 | GET/POST | /projects/:id/milestones | ✓ | ✓ |
 | PATCH/DELETE | /milestones/:id | ✓ | ✓ |
 | GET/POST | /projects/:id/tasks | ✓ | ✓ |

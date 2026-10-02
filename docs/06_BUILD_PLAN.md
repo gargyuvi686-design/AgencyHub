@@ -13,9 +13,9 @@ Rule: **cut features, never security.**
 - [x] Next.js login page + role-based redirect (/admin, /app, /portal)
 
 ## Phase 2 — Tenant architecture (5–7h)
-- [ ] `scopedPrisma` extension + repos pattern
-- [ ] Agency status check (suspended block)
-- [ ] First isolation tests (scenarios 1, 2, 6, 7)
+- [x] `scopedPrisma` extension + repos pattern
+- [x] Agency status check (suspended block)
+- [x] First isolation tests (scenarios 1, 2, 6, 7)
 
 ## Phase 3 — Super Admin (7–10h)
 - [ ] Stats, agency list (search/filter/paginate), detail, suspend/activate

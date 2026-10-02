@@ -8,6 +8,7 @@ erDiagram
   CLIENTS ||--o{ USERS : "portal logins"
   CLIENTS ||--o{ PROJECTS : owns
   AGENCIES ||--o{ PROJECTS : has
+  AGENCIES ||--o{ INVITATIONS : has
   PROJECTS ||--o{ PROJECT_MEMBERS : assigns
   USERS ||--o{ PROJECT_MEMBERS : joins
   PROJECTS ||--o{ MILESTONES : has
@@ -31,6 +32,8 @@ erDiagram
 
 **users**: id, agency_id (nullable), client_id (nullable), name, email (unique), password_hash, role ENUM(SUPER_ADMIN,AGENCY_ADMIN,AGENCY_MEMBER,CLIENT), is_active, last_login_at
  - Constraint (app-level + CHECK): SUPER_ADMIN → agency_id null; CLIENT → client_id not null.
+
+**invitations**: id, agency_id, client_id (nullable, for CLIENT portal users), email, role ENUM(AGENCY_ADMIN,AGENCY_MEMBER,CLIENT), token_hash (unique), expires_at, used_at (nullable), created_by (user), created_at
 
 **clients**: id, agency_id, company_name, contact_name, email, phone, notes
 
