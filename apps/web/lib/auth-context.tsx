@@ -1,7 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { api, ApiException } from './api';
 
 export type UserRole = 'SUPER_ADMIN' | 'AGENCY_ADMIN' | 'AGENCY_MEMBER' | 'CLIENT';
@@ -44,6 +44,8 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+type SessionData = { user: User; agency?: Agency; support?: SupportContextInfo };
+let sessionRequest: Promise<SessionData | null> | null = null;
 
 export function getRoleHome(role: UserRole): string {
   switch (role) {
@@ -65,32 +67,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [support, setSupport] = useState<SupportContextInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
+  const sessionCheckStarted = useRef(false);
 
   const refreshUser = useCallback(async () => {
+    sessionCheckStarted.current = true;
+    const currentRequest = sessionRequest ?? api.get<{ data: SessionData }>('/api/v1/auth/me')
+      .then((response) => response.data)
+      .catch(() => null);
+    sessionRequest = currentRequest;
     try {
-      const res = await api.get<{
-        data: {
-          user: User;
-          agency?: Agency;
-          support?: SupportContextInfo;
-        };
-      }>('/api/v1/auth/me');
-
-      setUser(res.data.user);
-      setAgency(res.data.agency || null);
-      setSupport(res.data.support || null);
-    } catch {
-      setUser(null);
-      setAgency(null);
-      setSupport(null);
+      const session = await currentRequest;
+      setUser(session?.user ?? null);
+      setAgency(session?.agency ?? null);
+      setSupport(session?.support ?? null);
     } finally {
+      if (sessionRequest === currentRequest) sessionRequest = null;
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    refreshUser();
-  }, [refreshUser]);
+    if (pathname === '/login' || pathname === '/register' || pathname === '/accept-invite') {
+      setIsLoading(false);
+      return;
+    }
+    if (!sessionCheckStarted.current) void refreshUser();
+  }, [pathname, refreshUser]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);

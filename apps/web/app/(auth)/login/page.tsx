@@ -104,7 +104,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground lg:grid lg:grid-cols-[41%_59%]">
+    <main className="min-h-screen bg-background text-foreground lg:grid lg:grid-cols-[41%_59%]">
       <section className="login-panel flex min-h-[340px] flex-col justify-between bg-indigo-950 px-7 py-8 text-white sm:px-12 lg:min-h-screen lg:px-[11%] lg:py-10">
         <Link href="/login" className="flex w-fit items-center gap-3 font-bold text-white">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-500"><Building2 className="h-5 w-5" /></span>
@@ -150,6 +150,6 @@ export default function LoginPage() {
           <p className="mt-5 text-center text-xs text-muted-foreground">New here? <Link href="/register" className="font-semibold text-indigo-700 underline underline-offset-2">Register your agency</Link></p>
         </div>
       </section>
-    </div>
+    </main>
   );
 }

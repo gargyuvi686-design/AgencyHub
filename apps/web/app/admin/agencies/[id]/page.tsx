@@ -35,6 +35,7 @@ import {
 } from '../../../../components/ui/dialog';
 import { Input } from '../../../../components/ui/input';
 import { useToast } from '../../../../lib/use-toast';
+import { useAuth } from '../../../../lib/auth-context';
 
 interface AgencyDetail {
   id: string;
@@ -67,6 +68,7 @@ export default function AgencyDetailPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { refreshUser } = useAuth();
 
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [activateOpen, setActivateOpen] = useState(false);
@@ -149,8 +151,7 @@ export default function AgencyDetailPage() {
     setIsEnteringSupport(true);
     try {
       await api.post(`/api/v1/admin/agencies/${agencyId}/support-session`);
-      // Invalidate auth/me query so banner and context update immediately
-      await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      await refreshUser();
       router.push('/app');
     } catch (err: unknown) {
       const msg =

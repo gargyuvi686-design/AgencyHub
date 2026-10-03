@@ -2,22 +2,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMe } from '../lib/use-me';
+import { useAuth } from '../lib/auth-context';
 import { api } from '../lib/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { ShieldAlert, ArrowLeft, Loader2, Clock } from 'lucide-react';
 
 export function SupportModeBanner() {
-  const { data: meData, refetch } = useMe();
+  const { support, refreshUser } = useAuth();
   const queryClient = useQueryClient();
   const router = useRouter();
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isExiting, setIsExiting] = useState(false);
 
-  const isSupportMode = meData?.isSupportMode || meData?.support?.isSupportMode;
-  const agencyName = meData?.supportAgencyName || meData?.support?.supportAgencyName || 'Agency';
-  const supportAgencyId = meData?.supportAgencyId || meData?.support?.supportAgencyId;
-  const supportExpiresAt = meData?.supportExpiresAt || meData?.support?.supportExpiresAt;
+  const isSupportMode = support?.inSupportMode || support?.isSupportMode;
+  const agencyName = support?.supportAgencyName || 'Agency';
+  const supportAgencyId = support?.supportAgencyId;
+  const supportExpiresAt = support?.supportExpiresAt;
 
   useEffect(() => {
     if (!isSupportMode || !supportExpiresAt) {
@@ -33,7 +33,7 @@ export function SupportModeBanner() {
 
       if (remaining <= 0) {
         // Expired — refetch me and redirect to /admin
-        refetch().then(() => {
+        refreshUser().then(() => {
           queryClient.invalidateQueries();
           router.push('/admin');
         });
@@ -43,7 +43,7 @@ export function SupportModeBanner() {
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [isSupportMode, supportExpiresAt, refetch, queryClient, router]);
+  }, [isSupportMode, supportExpiresAt, refreshUser, queryClient, router]);
 
   if (!isSupportMode) {
     return null;
@@ -60,7 +60,7 @@ export function SupportModeBanner() {
     setIsExiting(true);
     try {
       await api.post('/api/v1/admin/support-session/exit');
-      await refetch();
+      await refreshUser();
       queryClient.invalidateQueries();
       if (supportAgencyId) {
         router.push(`/admin/agencies/${supportAgencyId}`);

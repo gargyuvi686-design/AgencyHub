@@ -67,7 +67,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background text-foreground flex flex-col justify-center py-12 sm:px-6 lg:px-8">
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-medium mb-3 backdrop-blur-sm">
@@ -219,6 +219,6 @@ export default function RegisterPage() {
           </form>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
