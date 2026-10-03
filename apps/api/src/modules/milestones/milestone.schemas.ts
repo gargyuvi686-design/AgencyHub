@@ -17,7 +17,15 @@ export const updateMilestoneSchema = z.object({
   status: z.nativeEnum(MilestoneStatus).optional(),
   sortOrder: z.number().int().optional(),
   requiresClientApproval: z.boolean().optional(),
-  approvalStatus: z.nativeEnum(ApprovalStatus).optional(),
+  approvalStatus: z.enum([ApprovalStatus.NONE, ApprovalStatus.PENDING]).optional(),
+}).refine(
+  (input) => input.approvalStatus !== ApprovalStatus.PENDING || input.requiresClientApproval !== false,
+  'Client approval must be enabled before requesting approval.',
+);
+
+export const approveMilestoneSchema = z.object({
+  decision: z.enum([ApprovalStatus.APPROVED, ApprovalStatus.CHANGES_REQUESTED]),
+  comment: z.string().trim().max(5000).optional(),
 });
 
 export type CreateMilestoneInput = z.infer<typeof createMilestoneSchema>;

@@ -36,6 +36,8 @@ describe('Client feedback HTTP isolation', () => {
   let adminCookie: string;
   let memberCookie: string;
   let supportCookie: string;
+  let agencyBClientId: string | undefined;
+  let agencyBProjectId: string | undefined;
   const feedbackIds: string[] = [];
 
   beforeAll(async () => {
@@ -86,6 +88,8 @@ describe('Client feedback HTTP isolation', () => {
       await prisma.feedbackComment.deleteMany({ where: { feedbackId: { in: feedbackIds } } });
       await prisma.feedback.deleteMany({ where: { id: { in: feedbackIds } } });
     }
+    if (agencyBProjectId) await prisma.project.delete({ where: { id: agencyBProjectId } });
+    if (agencyBClientId) await prisma.client.delete({ where: { id: agencyBClientId } });
   });
 
   it('CLIENT submits feedback only for its own project and owns the resulting record', async () => {
@@ -251,5 +255,45 @@ describe('Client feedback HTTP isolation', () => {
       .send({ body: 'Support write attempt.' });
     expect(supportComment.status).toBe(403);
     expect(supportComment.body.error.code).toBe('SUPPORT_READ_ONLY');
+  });
+
+  it('agency feedback inbox is tenant and member scoped; portal inbox is client scoped', async () => {
+    const ownFeedback = await prisma.feedback.create({
+      data: { agencyId, projectId: ownProjectId, clientId, submittedBy: clientUserId, title: 'Inbox own fixture', description: 'Own agency feedback.' },
+    });
+    feedbackIds.push(ownFeedback.id);
+
+    const agencyB = await prisma.agency.findUniqueOrThrow({ where: { slug: 'apex-creative' } });
+    const adminB = await prisma.user.findUniqueOrThrow({ where: { email: 'admin@apex.test' } });
+    const clientB = await prisma.client.create({
+      data: { agencyId: agencyB.id, companyName: 'Inbox Agency B Client', contactName: 'Fixture', email: `inbox-${Date.now()}@example.test` },
+    });
+    agencyBClientId = clientB.id;
+    const projectB = await prisma.project.create({
+      data: { agencyId: agencyB.id, clientId: clientB.id, managerId: adminB.id, name: 'Inbox Agency B Project' },
+    });
+    agencyBProjectId = projectB.id;
+    const foreignFeedback = await prisma.feedback.create({
+      data: { agencyId: agencyB.id, projectId: projectB.id, clientId: clientB.id, submittedBy: adminB.id, title: 'Foreign inbox fixture', description: 'Must remain private.' },
+    });
+    feedbackIds.push(foreignFeedback.id);
+
+    const adminList = await request(app).get('/api/v1/feedback').set('Cookie', adminCookie);
+    expect(adminList.status).toBe(200);
+    expect(adminList.body.data.some((item: { id: string }) => item.id === ownFeedback.id)).toBe(true);
+    expect(adminList.body.data.some((item: { id: string }) => item.id === foreignFeedback.id)).toBe(false);
+
+    const memberList = await request(app).get('/api/v1/feedback?status=OPEN').set('Cookie', memberCookie);
+    expect(memberList.status).toBe(200);
+    expect(memberList.body.data.some((item: { id: string }) => item.id === ownFeedback.id)).toBe(true);
+    expect(memberList.body.data.some((item: { id: string }) => item.id === otherFeedbackId)).toBe(false);
+
+    const portalList = await request(app).get('/api/v1/portal/feedback').set('Cookie', clientCookie);
+    expect(portalList.status).toBe(200);
+    expect(portalList.body.data.some((item: { id: string }) => item.id === ownFeedback.id)).toBe(true);
+    expect(portalList.body.data.some((item: { id: string }) => item.id === otherFeedbackId)).toBe(false);
+
+    const clientWorkspaceList = await request(app).get('/api/v1/feedback').set('Cookie', clientCookie);
+    expect(clientWorkspaceList.status).toBe(403);
   });
 });

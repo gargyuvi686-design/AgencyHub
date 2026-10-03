@@ -81,12 +81,32 @@ export class PortalService {
       },
     });
 
+    const [pendingApprovals, feedbackAwaitingReply] = await Promise.all([
+      prisma.milestone.count({
+        where: {
+          agencyId: ctx.agencyId!,
+          approvalStatus: 'PENDING',
+          project: { is: { agencyId: ctx.agencyId!, clientId: ctx.clientId } },
+        },
+      }),
+      prisma.feedback.count({
+        where: {
+          agencyId: ctx.agencyId!,
+          clientId: ctx.clientId,
+          status: { in: ['OPEN', 'IN_REVIEW', 'IN_PROGRESS'] },
+          comments: { none: { author: { role: { in: ['AGENCY_ADMIN', 'AGENCY_MEMBER'] } } } },
+        },
+      }),
+    ]);
+
     return {
       data: {
         clientId: ctx.clientId,
         totalProjects: withProgress.length,
         activeProjects: withProgress.filter((p) => p.status !== 'COMPLETED').length,
         visibleMeetings,
+        pendingApprovals,
+        feedbackAwaitingReply,
         projects: withProgress,
       },
     };

@@ -6,7 +6,7 @@ import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth-context';
 
 type Project = { id: string; name: string; status: string; progress: number; dueDate?: string | null; client: { companyName: string } };
-type Overview = { totalProjects: number; activeProjects: number; visibleMeetings: number; projects: Project[] };
+type Overview = { totalProjects: number; activeProjects: number; visibleMeetings: number; pendingApprovals: number; feedbackAwaitingReply: number; projects: Project[] };
 
 export default function ClientPortalOverviewPage() {
   const { user } = useAuth();
@@ -27,6 +27,7 @@ export default function ClientPortalOverviewPage() {
     <div className="space-y-6">
       <header><h1 className="text-2xl font-bold tracking-tight text-white">Welcome back, {user?.name.split(' ')[0]}</h1><p className="mt-1 text-sm text-muted-foreground">{clientName}</p></header>
       {error && <p role="alert" className="border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-200">{error}</p>}
+      {!loading && overview && overview.pendingApprovals + overview.feedbackAwaitingReply > 0 && <aside className="flex flex-wrap items-center justify-between gap-3 border-l-4 border-amber-500 bg-amber-500/10 px-4 py-3" role="status"><p className="text-sm font-medium text-amber-900">{overview.pendingApprovals + overview.feedbackAwaitingReply} items need your attention</p><Link href="/portal#projects" className="text-sm font-semibold text-amber-900 underline underline-offset-4">Review now</Link></aside>}
 
       <section id="projects">
         <h2 className="mb-3 text-base font-bold text-white">Your projects</h2>

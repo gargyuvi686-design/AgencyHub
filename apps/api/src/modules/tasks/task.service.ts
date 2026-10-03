@@ -17,15 +17,22 @@ export class TaskService {
 
     const overdue = query.overdue === true || query.overdue === 'true';
     const dueThisWeek = query.dueThisWeek === true || query.dueThisWeek === 'true';
+    const mine = query.mine === true || query.mine === 'true';
 
     return repo.listForProject(projectId, pagination, {
       status: query.status,
       priority: query.priority,
-      assignee: query.assignee,
+      assignee: mine ? ctx.userId : query.assignee,
+      sort: query.sort,
       overdue,
       dueThisWeek,
       q: query.q,
     });
+  }
+
+  async listAssignees(ctx: ServiceContext, projectId: string) {
+    await resolveProjectAccess(ctx, projectId);
+    return new TaskRepository(ctx.agencyId!).listAssignees(projectId);
   }
 
   async create(ctx: ServiceContext, projectId: string, input: CreateTaskInput) {
@@ -47,6 +54,18 @@ export class TaskService {
       visibleToClient: false,
       metadata: { title: task.title, projectName: task.project?.name },
     });
+
+    if (task.assigneeId && task.assignee) {
+      await activityService.log({
+        ctx,
+        eventType: 'task.assigned',
+        entityType: 'task',
+        entityId: task.id,
+        projectId,
+        visibleToClient: false,
+        metadata: { oldAssignee: null, newAssignee: { id: task.assignee.id, name: task.assignee.name } },
+      });
+    }
 
     if (task.status === TaskStatus.DONE) {
       await activityService.log({
@@ -82,6 +101,31 @@ export class TaskService {
 
     const updated = await repo.update(taskId, input);
 
+    await activityService.log({
+      ctx,
+      eventType: 'task.updated',
+      entityType: 'task',
+      entityId: taskId,
+      projectId: updated.projectId,
+      visibleToClient: false,
+      metadata: { title: updated.title, projectName: updated.project?.name },
+    });
+
+    if (input.assigneeId !== undefined && input.assigneeId !== current.assigneeId) {
+      await activityService.log({
+        ctx,
+        eventType: 'task.assigned',
+        entityType: 'task',
+        entityId: taskId,
+        projectId: updated.projectId,
+        visibleToClient: false,
+        metadata: {
+          oldAssignee: current.assignee ? { id: current.assignee.id, name: current.assignee.name } : null,
+          newAssignee: updated.assignee ? { id: updated.assignee.id, name: updated.assignee.name } : null,
+        },
+      });
+    }
+
     if (input.status === TaskStatus.DONE && current.status !== TaskStatus.DONE) {
       await activityService.log({
         ctx,
@@ -99,11 +143,22 @@ export class TaskService {
 
   async delete(ctx: ServiceContext, taskId: string) {
     const repo = new TaskRepository(ctx.agencyId!);
+    let memberId: string | undefined;
     if (ctx.role === 'AGENCY_MEMBER') {
       const current = await repo.findById(taskId);
       await resolveProjectAccess(ctx, current.projectId);
+      memberId = ctx.userId;
     }
-    await repo.delete(taskId);
+    const deleted = await repo.delete(taskId, memberId);
+    await activityService.log({
+      ctx,
+      eventType: 'task.deleted',
+      entityType: 'task',
+      entityId: deleted.id,
+      projectId: deleted.projectId,
+      visibleToClient: false,
+      metadata: { title: deleted.title, projectName: deleted.project?.name },
+    });
   }
 }
 

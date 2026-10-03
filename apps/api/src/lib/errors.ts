@@ -28,6 +28,9 @@ export const Errors = {
   BAD_REQUEST: (msg = 'Bad request.') =>
     new AppError('BAD_REQUEST', 400, msg),
 
+  UNSUPPORTED_MEDIA_TYPE: (msg = 'File content does not match its declared type.') =>
+    new AppError('UNSUPPORTED_MEDIA_TYPE', 415, msg),
+
   UNAUTHORIZED: () =>
     new AppError('UNAUTHORIZED', 401, 'Authentication required.'),
 

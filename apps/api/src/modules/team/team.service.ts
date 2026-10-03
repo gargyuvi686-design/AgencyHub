@@ -55,7 +55,7 @@ export class TeamService {
     });
 
     // The accept link is the raw token — frontend constructs the URL
-    return { acceptLink: `/auth/accept-invite?token=${rawToken}`, token: rawToken };
+    return { acceptLink: `/accept-invite?token=${rawToken}`, token: rawToken };
   }
 
   /**

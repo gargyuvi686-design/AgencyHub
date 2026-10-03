@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { milestoneService } from './milestone.service';
 import type { ServiceContext } from '../activity/activity.service';
+import { approveMilestoneSchema } from './milestone.schemas';
 
 function buildContext(req: Request): ServiceContext {
   return {
@@ -57,6 +58,27 @@ export class MilestoneController {
       const ctx = buildContext(req);
       await milestoneService.delete(ctx, req.params.id);
       res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async listPortal(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const ctx = buildContext(req);
+      const data = await milestoneService.listPortalMilestones(ctx, req.params.id);
+      res.json({ data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async approvePortal(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const ctx = buildContext(req);
+      const input = approveMilestoneSchema.parse(req.body);
+      const data = await milestoneService.decidePortalApproval(ctx, req.params.id, input.decision, input.comment);
+      res.json({ data });
     } catch (err) {
       next(err);
     }

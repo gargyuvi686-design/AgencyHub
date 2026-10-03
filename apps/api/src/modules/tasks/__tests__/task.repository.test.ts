@@ -10,6 +10,7 @@ vi.mock('../../../lib/prisma', () => ({
       count: vi.fn(),
       create: vi.fn(),
       updateMany: vi.fn(),
+      delete: vi.fn(),
       deleteMany: vi.fn(),
     },
     project: {
@@ -99,19 +100,33 @@ describe('TaskRepository (Unit & Isolation)', () => {
     });
   });
 
-  describe('delete — deleteMany scoped by agencyId with count check', () => {
-    it('deletes task using deleteMany scoped by agencyId', async () => {
-      (prisma.task.deleteMany as any).mockResolvedValue({ count: 1 });
+  describe('delete — tenant and member ownership scope', () => {
+    it('deletes task with agency scope and returns the removed task', async () => {
+      (prisma.task.delete as any).mockResolvedValue({ id: TASK_ID, title: 'Do work' });
 
-      await expect(repoA.delete(TASK_ID)).resolves.toBeUndefined();
+      await expect(repoA.delete(TASK_ID)).resolves.toMatchObject({ id: TASK_ID });
 
-      expect(prisma.task.deleteMany).toHaveBeenCalledWith({
+      expect(prisma.task.delete).toHaveBeenCalledWith({
         where: { id: TASK_ID, agencyId: AGENCY_A_ID },
+        select: expect.any(Object),
       });
     });
 
-    it('throws 404 when deleteMany affects 0 rows (cross-tenant task)', async () => {
-      (prisma.task.deleteMany as any).mockResolvedValue({ count: 0 });
+    it('constrains a member delete to tasks they created or are assigned', async () => {
+      (prisma.task.delete as any).mockResolvedValue({ id: TASK_ID });
+      await repoA.delete(TASK_ID, 'member-id');
+
+      expect(prisma.task.delete).toHaveBeenCalledWith(expect.objectContaining({
+        where: {
+          id: TASK_ID,
+          agencyId: AGENCY_A_ID,
+          OR: [{ createdBy: 'member-id' }, { assigneeId: 'member-id' }],
+        },
+      }));
+    });
+
+    it('throws 404 when a tenant-scoped delete does not match', async () => {
+      (prisma.task.delete as any).mockRejectedValue({ code: 'P2025' });
 
       await expect(repoA.delete('cross-agency-task-id')).rejects.toMatchObject({
         status: 404,

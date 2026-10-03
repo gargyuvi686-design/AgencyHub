@@ -99,6 +99,12 @@ projectRouter.get(
   (req, res, next) => taskController.listForProject(req, res, next),
 );
 
+projectRouter.get(
+  '/:id/assignees',
+  requireRole(UserRole.AGENCY_ADMIN, UserRole.AGENCY_MEMBER),
+  (req, res, next) => taskController.listAssignees(req, res, next),
+);
+
 projectRouter.post(
   '/:id/tasks',
   requireRole(UserRole.AGENCY_ADMIN, UserRole.AGENCY_MEMBER),

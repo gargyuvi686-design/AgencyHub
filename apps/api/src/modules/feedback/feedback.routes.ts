@@ -13,6 +13,7 @@ feedbackRouter.use(supportGuard);
 feedbackRouter.use(loadAgencyStatus);
 feedbackRouter.use(requireRole(UserRole.AGENCY_ADMIN, UserRole.AGENCY_MEMBER));
 
+feedbackRouter.get('/', (req, res, next) => feedbackController.listAgency(req, res, next));
 feedbackRouter.patch('/:id', (req, res, next) => feedbackController.updateStatus(req, res, next));
 feedbackRouter.get('/:id/comments', (req, res, next) => feedbackController.listComments(req, res, next));
 feedbackRouter.post('/:id/comments', (req, res, next) => feedbackController.addComment(req, res, next));

@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
+import { FeedbackStatus } from '@prisma/client';
 import { Errors } from '../../lib/errors';
 import type { ServiceContext } from '../activity/activity.service';
 import {
@@ -19,6 +20,27 @@ function buildContext(req: Request): ServiceContext {
 }
 
 export class FeedbackController {
+  async listAgency(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const status = typeof req.query.status === 'string' ? req.query.status : undefined;
+      if (status && !Object.values(FeedbackStatus).includes(status as FeedbackStatus)) {
+        throw Errors.BAD_REQUEST('Invalid feedback status.');
+      }
+      const result = await feedbackService.listForAgency(buildContext(req), status as FeedbackStatus | undefined);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async listPortal(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      res.json(await feedbackService.listForPortal(buildContext(req)));
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async listForProject(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const result = await feedbackService.listForProject(buildContext(req), req.params.id);

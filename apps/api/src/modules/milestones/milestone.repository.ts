@@ -44,7 +44,9 @@ export class MilestoneRepository extends BaseRepository {
 
   async create(projectId: string, input: CreateMilestoneInput): Promise<any> {
     const requiresApproval = input.requiresClientApproval ?? false;
-    const approvalStatus = requiresApproval ? ApprovalStatus.PENDING : ApprovalStatus.NONE;
+    const approvalStatus = requiresApproval && input.status === MilestoneStatus.DONE
+      ? ApprovalStatus.PENDING
+      : ApprovalStatus.NONE;
 
     return this.db.milestone.create({
       data: {
@@ -72,13 +74,12 @@ export class MilestoneRepository extends BaseRepository {
 
     if (input.requiresClientApproval !== undefined) {
       data.requiresClientApproval = input.requiresClientApproval;
-      if (input.approvalStatus === undefined) {
-        data.approvalStatus = input.requiresClientApproval ? ApprovalStatus.PENDING : ApprovalStatus.NONE;
-      }
     }
 
     if (input.approvalStatus !== undefined) {
       data.approvalStatus = input.approvalStatus;
+      data.approvedBy = null;
+      data.approvedAt = null;
     }
 
     const result = await this.db.milestone.updateMany({

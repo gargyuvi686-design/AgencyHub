@@ -17,6 +17,18 @@ export interface TaskFilterOptions {
   overdue?: boolean;
   dueThisWeek?: boolean;
   q?: string;
+  sort?: 'priority' | 'dueDate';
+}
+
+const PRIORITY_RANK: Record<string, number> = { URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+
+function compareTasks(left: any, right: any, sort: 'priority' | 'dueDate' = 'priority'): number {
+  const priorityDifference = (PRIORITY_RANK[right.priority] ?? 0) - (PRIORITY_RANK[left.priority] ?? 0);
+  const leftDueDate = left.dueDate ? new Date(left.dueDate).getTime() : Number.POSITIVE_INFINITY;
+  const rightDueDate = right.dueDate ? new Date(right.dueDate).getTime() : Number.POSITIVE_INFINITY;
+  const dueDifference = leftDueDate - rightDueDate;
+  if (sort === 'dueDate') return dueDifference || priorityDifference;
+  return priorityDifference || dueDifference;
 }
 
 export const TASK_SELECT = {
@@ -28,6 +40,8 @@ export const TASK_SELECT = {
   description: true,
   status: true,
   priority: true,
+  assigneeId: true,
+  createdBy: true,
   dueDate: true,
   completedAt: true,
   createdAt: true,
@@ -103,13 +117,16 @@ export class TaskRepository extends BaseRepository {
       where.status = { notIn: [TaskStatus.DONE, TaskStatus.CANCELLED] };
     }
 
-    const result = await this.paginate<any>(this.db.task, where, pagination, {
-      select: TASK_SELECT,
-      orderBy: [{ createdAt: 'asc' }],
-    });
-
-    result.data = result.data.map((task: any) => computeTaskDerivedFields(task));
-    return result;
+    const { skip, take, page, limit } = this.parsePagination(pagination);
+    const [allMatching, total] = await Promise.all([
+      this.db.task.findMany({ where, select: TASK_SELECT }),
+      this.db.task.count({ where }),
+    ]);
+    const sorted = allMatching.sort((left: any, right: any) => compareTasks(left, right, filters.sort));
+    return {
+      data: sorted.slice(skip, skip + take).map((task: any) => computeTaskDerivedFields(task)),
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   /**
@@ -131,18 +148,47 @@ export class TaskRepository extends BaseRepository {
   /**
    * Validate assignee is an active AGENCY_* user in this agency.
    */
-  async validateAssignee(assigneeId: string): Promise<void> {
+  async validateAssignee(assigneeId: string, projectId: string): Promise<void> {
     const user = await this.db.user.findFirst({
-      where: { id: assigneeId, agencyId: this.agencyId },
+      where: {
+        id: assigneeId,
+        agencyId: this.agencyId,
+        isActive: true,
+        role: { in: [UserRole.AGENCY_ADMIN, UserRole.AGENCY_MEMBER] },
+        OR: [
+          { projectMemberships: { some: { projectId, agencyId: this.agencyId } } },
+          { managedProjects: { some: { id: projectId, agencyId: this.agencyId } } },
+        ],
+      },
     });
 
     if (!user) {
-      throw Errors.NOT_FOUND('Assignee');
+      throw Errors.VALIDATION('Task assignee must be an active agency staff member assigned to this project.');
     }
+  }
 
-    if (user.role === UserRole.CLIENT || !user.isActive) {
-      throw Errors.VALIDATION('Task assignee must be an active agency staff member.');
-    }
+  async listAssignees(projectId: string): Promise<any[]> {
+    const project = await this.db.project.findFirst({
+      where: { id: projectId, agencyId: this.agencyId },
+      select: { managerId: true },
+    });
+    if (!project) throw Errors.NOT_FOUND('Project');
+
+    const memberships = await this.db.projectMember.findMany({
+      where: { projectId, agencyId: this.agencyId },
+      select: { userId: true },
+    });
+    const userIds = [...new Set([project.managerId, ...memberships.map((member) => member.userId)])];
+    return this.db.user.findMany({
+      where: {
+        id: { in: userIds },
+        agencyId: this.agencyId,
+        isActive: true,
+        role: { in: [UserRole.AGENCY_ADMIN, UserRole.AGENCY_MEMBER] },
+      },
+      select: { id: true, name: true, email: true, role: true },
+      orderBy: { name: 'asc' },
+    });
   }
 
   /**
@@ -172,7 +218,7 @@ export class TaskRepository extends BaseRepository {
 
     // Validate assignee if provided
     if (input.assigneeId) {
-      await this.validateAssignee(input.assigneeId);
+      await this.validateAssignee(input.assigneeId, input.projectId);
     }
 
     // Validate milestone if provided
@@ -207,12 +253,12 @@ export class TaskRepository extends BaseRepository {
    * Update a task using updateMany scoped by agencyId.
    */
   async update(taskId: string, input: UpdateTaskRepoInput): Promise<any> {
+    const existing = await this.findById(taskId);
     if (input.assigneeId) {
-      await this.validateAssignee(input.assigneeId);
+      await this.validateAssignee(input.assigneeId, existing.projectId);
     }
 
     if (input.milestoneId) {
-      const existing = await this.findById(taskId);
       await this.validateMilestone(input.milestoneId, existing.projectId);
     }
 
@@ -247,15 +293,23 @@ export class TaskRepository extends BaseRepository {
   }
 
   /**
-   * Delete a task using deleteMany scoped by agencyId.
+  * Delete a task scoped by agencyId and optional member ownership.
    */
-  async delete(taskId: string): Promise<void> {
-    const result = await this.db.task.deleteMany({
-      where: { id: taskId, agencyId: this.agencyId },
-    });
-
-    if (result.count === 0) {
-      throw Errors.NOT_FOUND('Task');
+  async delete(taskId: string, memberId?: string): Promise<any> {
+    try {
+      return await this.db.task.delete({
+        where: {
+          id: taskId,
+          agencyId: this.agencyId,
+          ...(memberId ? { OR: [{ createdBy: memberId }, { assigneeId: memberId }] } : {}),
+        },
+        select: TASK_SELECT,
+      });
+    } catch (err) {
+      if (typeof err === 'object' && err !== null && 'code' in err && err.code === 'P2025') {
+        throw Errors.NOT_FOUND('Task');
+      }
+      throw err;
     }
   }
 }

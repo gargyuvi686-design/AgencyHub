@@ -40,6 +40,7 @@ export default function ClientPortalLayout({ children }: { children: React.React
           <nav className="flex items-center gap-1 text-sm font-medium" aria-label="Client portal navigation">
             <Link href="/portal" aria-current={pathname === '/portal' ? 'page' : undefined} className={`rounded-lg px-3 py-2 ${pathname === '/portal' ? 'text-teal-700' : 'text-muted-foreground hover:bg-muted'}`}>Overview</Link>
             <Link href="/portal#projects" aria-current={pathname.startsWith('/portal/projects') ? 'page' : undefined} className={`rounded-lg px-3 py-2 ${pathname.startsWith('/portal/projects') ? 'text-teal-700' : 'text-muted-foreground hover:bg-muted'}`}>Projects</Link>
+            <Link href="/portal/feedback" aria-current={pathname.startsWith('/portal/feedback') ? 'page' : undefined} className={`rounded-lg px-3 py-2 ${pathname.startsWith('/portal/feedback') ? 'text-teal-700' : 'text-muted-foreground hover:bg-muted'}`}>Feedback</Link>
           </nav>
           <button onClick={() => logout()} title="Sign out" className="rounded-lg p-2 text-muted-foreground hover:bg-muted" aria-label="Sign out"><LogOut className="h-4 w-4" /></button>
         </div>

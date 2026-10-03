@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/prisma';
 import { ActorType } from '@prisma/client';
+import { Errors } from '../../lib/errors';
 
 /**
  * Request context passed to every service call.
@@ -106,6 +107,36 @@ export class ActivityService {
         totalPages: Math.ceil(total / limit),
       },
     };
+  }
+
+  async listForAgency(ctx: ServiceContext, pagination?: { page?: number; limit?: number }) {
+    if (!ctx.agencyId) throw Errors.UNAUTHORIZED();
+
+    const page = Math.max(1, Number(pagination?.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(pagination?.limit) || 20));
+    const where: any = { agencyId: ctx.agencyId };
+    if (ctx.role === 'AGENCY_MEMBER') {
+      where.project = {
+        is: {
+          OR: [
+            { managerId: ctx.userId },
+            { members: { some: { userId: ctx.userId, agencyId: ctx.agencyId } } },
+          ],
+        },
+      };
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.activityLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.activityLog.count({ where }),
+    ]);
+
+    return { data, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } };
   }
 
   async listForClient(ctx: ServiceContext, clientId: string, pagination?: { page?: number; limit?: number }) {

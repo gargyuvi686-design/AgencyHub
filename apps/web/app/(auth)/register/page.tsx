@@ -86,6 +86,7 @@ export default function RegisterPage() {
             Sign in
           </Link>
         </p>
+        <p className="mt-2 text-xs text-muted-foreground">Joining an existing agency? Use the invite link you were sent.</p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg px-4">

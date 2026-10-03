@@ -13,6 +13,18 @@ function buildContext(req: Request): ServiceContext {
 }
 
 class ActivityController {
+  async listForAgency(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await activityService.listForAgency(buildContext(req), {
+        page: Number(req.query.page) || 1,
+        limit: Number(req.query.limit) || 20,
+      });
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   /**
    * GET /projects/:id/activity
    */

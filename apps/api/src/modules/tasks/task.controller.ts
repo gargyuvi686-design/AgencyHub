@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { taskService } from './task.service';
+import { listTasksQuerySchema } from './task.schemas';
 import type { ServiceContext } from '../activity/activity.service';
 
 function buildContext(req: Request): ServiceContext {
@@ -12,10 +13,20 @@ function buildContext(req: Request): ServiceContext {
 }
 
 export class TaskController {
+  async listAssignees(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await taskService.listAssignees(buildContext(req), req.params.id);
+      res.json({ data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async listForProject(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const ctx = buildContext(req);
-      const result = await taskService.listForProject(ctx, req.params.projectId || req.params.id, req.query as any);
+      const query = listTasksQuerySchema.parse(req.query);
+      const result = await taskService.listForProject(ctx, req.params.projectId || req.params.id, query);
       res.json(result);
     } catch (err) {
       next(err);

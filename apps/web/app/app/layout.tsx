@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth-context';
-import { Building2, LogOut, Loader2, LayoutDashboard, Briefcase, FolderKanban } from 'lucide-react';
+import { Building2, LogOut, Loader2, LayoutDashboard, Briefcase, FolderKanban, ListTodo, Users, MessageSquareText, Activity } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AgencyAppLayout({ children }: { children: React.ReactNode }) {
@@ -44,6 +44,10 @@ export default function AgencyAppLayout({ children }: { children: React.ReactNod
     { href: '/app', label: 'Dashboard', icon: LayoutDashboard, exact: true },
     { href: '/app/projects', label: 'Projects', icon: FolderKanban },
     { href: '/app/clients', label: 'Clients', icon: Briefcase },
+    { href: '/app/my-work', label: 'My Work', icon: ListTodo },
+    { href: '/app/feedback', label: 'Feedback', icon: MessageSquareText },
+    { href: '/app/activity', label: 'Activity', icon: Activity },
+    ...(user.role === 'AGENCY_ADMIN' ? [{ href: '/app/team', label: 'Team', icon: Users }] : []),
   ];
   const isActive = (href: string, exact = false) => exact ? pathname === href : pathname.startsWith(href);
 

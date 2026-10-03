@@ -146,7 +146,7 @@ describe('Phase 4B Full Specification Test Suite (STEP 6)', () => {
       await prisma.project.delete({ where: { id: otherProject.id } });
     });
 
-    it('rejects assignee from Agency B -> 404 NOT_FOUND', async () => {
+    it('rejects assignee from Agency B -> 422 VALIDATION_ERROR', async () => {
       const beforeCount = await prisma.task.count({ where: { projectId: projectA.id } });
 
       const res = await request(app)
@@ -157,8 +157,8 @@ describe('Phase 4B Full Specification Test Suite (STEP 6)', () => {
           assigneeId: adminB.id,
         });
 
-      expect(res.status).toBe(404);
-      expect(res.body.error?.code).toBe('NOT_FOUND');
+      expect(res.status).toBe(422);
+      expect(res.body.error?.code).toMatch(/VALIDATION/);
 
       const afterCount = await prisma.task.count({ where: { projectId: projectA.id } });
       expect(afterCount).toBe(beforeCount);
@@ -190,7 +190,7 @@ describe('Phase 4B Full Specification Test Suite (STEP 6)', () => {
         .send({
           title: 'Valid Scenario 11 Task',
           priority: 'HIGH',
-          assigneeId: memberA.id,
+          assigneeId: projectA.managerId,
         });
 
       expect(res.status).toBe(201);

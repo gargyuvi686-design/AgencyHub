@@ -125,12 +125,20 @@ describe('Project file HTTP isolation and storage', () => {
   });
 
   async function upload(cookie: string, projectId: string, fileName: string, contents: Buffer | string) {
+    const extension = fileName.toLowerCase().split('.').pop();
+    const contentType = extension === 'txt' ? 'text/plain'
+      : extension === 'csv' ? 'text/csv'
+        : extension === 'png' ? 'image/png'
+          : extension === 'jpg' || extension === 'jpeg' ? 'image/jpeg'
+            : extension === 'docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+              : extension === 'xlsx' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                : 'application/pdf';
     const response = await request(app)
       .post(`/api/v1/projects/${projectId}/files`)
       .set('Cookie', cookie)
       .attach('file', Buffer.isBuffer(contents) ? contents : Buffer.from(contents), {
         filename: fileName,
-        contentType: fileName.endsWith('.txt') ? 'text/plain' : 'application/pdf',
+        contentType,
       });
     if (response.status === 201) fileIds.push(response.body.data.id);
     return response;
@@ -203,7 +211,7 @@ describe('Project file HTTP isolation and storage', () => {
       .set('Cookie', adminACookie);
     expect(foreignDownload.status).toBe(404);
 
-    const otherClientUpload = await upload(adminACookie, otherClientProjectId, 'client-two.pdf', 'client two bytes');
+    const otherClientUpload = await upload(adminACookie, otherClientProjectId, 'client-two.pdf', Buffer.from('%PDF-1.4\nclient two bytes'));
     expect(otherClientUpload.status).toBe(201);
 
     const memberList = await request(app)
@@ -308,6 +316,30 @@ describe('Project file HTTP isolation and storage', () => {
       .set('Cookie', adminACookie)
       .attach('file', Buffer.alloc(10 * 1024 * 1024 + 1), { filename: 'large.txt', contentType: 'text/plain' });
     expect(tooLarge.status).toBe(400);
+  });
+
+  it('rejects content mismatches and null bytes while accepting supported signatures', async () => {
+    const htmlAsPdf = await request(app)
+      .post(`/api/v1/projects/${ownProjectId}/files`)
+      .set('Cookie', adminACookie)
+      .attach('file', Buffer.from('<!doctype html><script>alert(1)</script>'), { filename: 'page.html', contentType: 'application/pdf' });
+    expect(htmlAsPdf.status).toBe(415);
+
+    const nullText = await upload(adminACookie, ownProjectId, 'null-byte.txt', Buffer.from([0x61, 0x00, 0x62]));
+    expect(nullText.status).toBe(415);
+    const nullCsv = await upload(adminACookie, ownProjectId, 'null-byte.csv', Buffer.from([0x61, 0x00, 0x62]));
+    expect(nullCsv.status).toBe(415);
+
+    const pdf = await upload(adminACookie, ownProjectId, 'signature.pdf', Buffer.from('%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF'));
+    expect(pdf.status).toBe(201);
+    const png = await upload(adminACookie, ownProjectId, 'signature.png', Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00]));
+    expect(png.status).toBe(201);
+    const jpg = await upload(adminACookie, ownProjectId, 'signature.jpg', Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
+    expect(jpg.status).toBe(201);
+    const docx = await upload(adminACookie, ownProjectId, 'signature.docx', Buffer.from([0x50, 0x4b, 0x03, 0x04]));
+    expect(docx.status).toBe(201);
+    const xlsx = await upload(adminACookie, ownProjectId, 'signature.xlsx', Buffer.from([0x50, 0x4b, 0x03, 0x04]));
+    expect(xlsx.status).toBe(201);
   });
 
   it('support mode can download but cannot upload or delete', async () => {

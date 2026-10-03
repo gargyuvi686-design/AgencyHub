@@ -247,7 +247,7 @@ describe('Clients Module Integration Tests', () => {
 
       expect(res.status).toBe(201);
       expect(res.body.data).toMatchObject({
-        acceptLink: expect.stringContaining('/auth/accept-invite?token='),
+        acceptLink: expect.stringContaining('/accept-invite?token='),
         token: expect.any(String),
       });
 

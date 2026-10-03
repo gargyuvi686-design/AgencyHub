@@ -28,14 +28,16 @@ export default function PortalProjectPage() {
   const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
   const [feedbackForm, setFeedbackForm] = useState({ title: '', description: '' });
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
+  const [approvalComments, setApprovalComments] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     try {
-      const [projectResponse, meetingResponse, feedbackResponse, filesResponse] = await Promise.all([
+      const [projectResponse, milestoneResponse, meetingResponse, feedbackResponse, filesResponse] = await Promise.all([
       api.get<{ data: Project }>(`/api/v1/portal/projects/${params.id}`),
+      api.get<{ data: Milestone[] }>(`/api/v1/portal/projects/${params.id}/milestones`),
       api.get<{ data: Meeting[] }>(`/api/v1/portal/projects/${params.id}/meetings`),
         api.get<{ data: FeedbackItem[] }>(`/api/v1/portal/projects/${params.id}/feedback`),
         api.get<{ data: ProjectFile[] }>(`/api/v1/portal/projects/${params.id}/files`),
@@ -44,7 +46,7 @@ export default function PortalProjectPage() {
         const comments = await api.get<{ data: FeedbackComment[] }>(`/api/v1/portal/feedback/${item.id}/comments`);
         return { ...item, comments: comments.data };
       }));
-      setProject(projectResponse.data);
+      setProject({ ...projectResponse.data, milestones: milestoneResponse.data });
       setMeetings(meetingResponse.data);
       setFeedback(feedbackWithComments);
       setFiles(filesResponse.data);
@@ -90,6 +92,24 @@ export default function PortalProjectPage() {
     }
   }
 
+  async function decideMilestone(event: FormEvent, milestoneId: string, decision: 'APPROVED' | 'CHANGES_REQUESTED') {
+    event.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      await api.post(`/api/v1/portal/milestones/${milestoneId}/approve`, {
+        decision,
+        ...(decision === 'CHANGES_REQUESTED' ? { comment: approvalComments[milestoneId]?.trim() } : {}),
+      });
+      setApprovalComments((current) => ({ ...current, [milestoneId]: '' }));
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to save your milestone decision.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (loading) return <p className="py-10 text-sm text-muted-foreground">Loading project…</p>;
   if (error || !project) return <div role="alert" className="border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">{error || 'Project not found.'}</div>;
 
@@ -103,7 +123,7 @@ export default function PortalProjectPage() {
 
       <section>
         <h2 className="mb-3 text-lg font-semibold text-white">Milestones</h2>
-        {project.milestones.length === 0 ? <p className="border border-dashed border-input p-6 text-sm text-muted-foreground">No milestones have been shared.</p> : <div className="divide-y divide-border border-y border-border">{project.milestones.map((milestone) => <div key={milestone.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div><p className="text-sm font-medium text-white">{milestone.title}</p>{milestone.requiresClientApproval && <p className="mt-1 text-xs text-amber-300">Approval: {milestone.approvalStatus.toLowerCase().replace('_', ' ')}</p>}</div><div className="text-right"><p className="text-xs text-muted-foreground">{milestone.status.replace('_', ' ').toLowerCase()}</p>{milestone.dueDate && <p className="mt-1 text-xs text-muted-foreground">Due {new Date(milestone.dueDate).toLocaleDateString()}</p>}</div></div>)}</div>}
+        {project.milestones.length === 0 ? <p className="border border-dashed border-input p-6 text-sm text-muted-foreground">No milestones have been shared.</p> : <div className="divide-y divide-border border-y border-border">{project.milestones.map((milestone) => <article key={milestone.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div><p className="text-sm font-medium text-white">{milestone.title}</p><div className="mt-1 flex flex-wrap gap-2"><span className="status-pill bg-muted text-foreground">{milestone.status.replace('_', ' ').toLowerCase()}</span>{milestone.requiresClientApproval && <span className={`status-pill ${milestone.approvalStatus === 'PENDING' ? 'bg-amber-100 text-amber-900' : milestone.approvalStatus === 'APPROVED' ? 'bg-emerald-100 text-emerald-900' : milestone.approvalStatus === 'CHANGES_REQUESTED' ? 'bg-rose-100 text-rose-900' : 'bg-muted text-foreground'}`}>Approval {milestone.approvalStatus.toLowerCase().replace('_', ' ')}</span>}</div></div><div className="text-right"><p className="text-xs text-muted-foreground">{milestone.dueDate ? `Due ${new Date(milestone.dueDate).toLocaleDateString()}` : ''}</p>{milestone.requiresClientApproval && milestone.approvalStatus === 'PENDING' && <div className="mt-2 flex flex-wrap justify-end gap-2"><button type="button" disabled={busy} onClick={(event) => void decideMilestone(event, milestone.id, 'APPROVED')} className="h-9 bg-emerald-700 px-3 text-xs font-semibold text-white disabled:opacity-50">Approve</button><form onSubmit={(event) => void decideMilestone(event, milestone.id, 'CHANGES_REQUESTED')} className="flex flex-wrap justify-end gap-2"><input required aria-label={`Comment for ${milestone.title}`} placeholder="What should change?" value={approvalComments[milestone.id] ?? ''} onChange={(event) => setApprovalComments((current) => ({ ...current, [milestone.id]: event.target.value }))} className="h-9 min-w-40 border border-input bg-background px-2 text-xs text-white placeholder:text-muted-foreground" /><button disabled={busy} className="h-9 border border-amber-500/50 px-3 text-xs text-amber-900 disabled:opacity-50">Request changes</button></form></div>}</div></article>)}</div>}
       </section>
 
       <section>

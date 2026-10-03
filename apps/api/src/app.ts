@@ -17,6 +17,7 @@ import { dashboardRouter, myWorkRouter } from './modules/dashboard/dashboard.rou
 import { portalRouter } from './modules/portal/portal.routes';
 import { feedbackRouter } from './modules/feedback/feedback.routes';
 import { fileRouter } from './modules/files/file.routes';
+import { activityRouter } from './modules/activity/activity.routes';
 
 const app: Express = express();
 app.set('trust proxy', 1);
@@ -53,6 +54,7 @@ apiRouter.use('/admin', adminRouter);
 apiRouter.use('/team', teamRouter);
 apiRouter.use('/clients', clientsRouter);
 apiRouter.use('/feedback', feedbackRouter);
+apiRouter.use('/activity', activityRouter);
 apiRouter.use('/files', fileRouter);
 apiRouter.use('/projects', projectRouter);
 // Standalone resource routes (/milestones/:id, /tasks/:id, /meetings/:id)

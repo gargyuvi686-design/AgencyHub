@@ -133,7 +133,7 @@ export class ClientService {
 
     return {
       invitationId: invitation.id,
-      acceptLink: `/auth/accept-invite?token=${rawToken}`,
+      acceptLink: `/accept-invite?token=${rawToken}`,
       token: rawToken,
       expiresAt,
     };

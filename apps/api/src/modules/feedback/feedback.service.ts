@@ -24,6 +24,55 @@ const FEEDBACK_SELECT = {
 };
 
 export class FeedbackService {
+  async listForAgency(ctx: ServiceContext, status?: FeedbackStatus) {
+    if (!ctx.agencyId) throw Errors.UNAUTHORIZED();
+    const where: any = { agencyId: ctx.agencyId, ...(status ? { status } : {}) };
+    if (ctx.role === 'AGENCY_MEMBER') {
+      where.project = {
+        is: {
+          OR: [
+            { managerId: ctx.userId },
+            { members: { some: { userId: ctx.userId, agencyId: ctx.agencyId } } },
+          ],
+        },
+      };
+    }
+    const data = await prisma.feedback.findMany({
+      where,
+      select: {
+        ...FEEDBACK_SELECT,
+        project: { select: { id: true, name: true } },
+        comments: {
+          orderBy: { createdAt: 'asc' },
+          select: { id: true, body: true, createdAt: true, author: { select: { id: true, name: true, role: true } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return { data };
+  }
+
+  async listForPortal(ctx: ServiceContext) {
+    if (!ctx.agencyId || !ctx.clientId) throw Errors.FORBIDDEN();
+    const data = await prisma.feedback.findMany({
+      where: {
+        agencyId: ctx.agencyId,
+        clientId: ctx.clientId,
+        project: { is: { agencyId: ctx.agencyId, clientId: ctx.clientId } },
+      },
+      select: {
+        ...FEEDBACK_SELECT,
+        project: { select: { id: true, name: true } },
+        comments: {
+          orderBy: { createdAt: 'asc' },
+          select: { id: true, body: true, createdAt: true, author: { select: { id: true, name: true, role: true } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return { data };
+  }
+
   async listForProject(ctx: ServiceContext, projectId: string) {
     const project = await resolveProjectAccess(ctx, projectId);
     const where = {

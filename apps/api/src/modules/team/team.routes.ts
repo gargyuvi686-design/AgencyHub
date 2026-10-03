@@ -18,11 +18,13 @@ teamRouter.use(loadAgencyStatus);
 // ── Team routes — AGENCY_ADMIN only ──────────────────────────────────────────
 // Members calling /team → 403 (requireRole enforces this)
 
+const inviteHandler = (req: any, res: any, next: any) => teamController.invite(req, res, next);
+
 teamRouter.post(
-  '/invite',
+  ['/invite', '/invites'],
   requireRole(UserRole.AGENCY_ADMIN),
   validateBody(inviteSchema),
-  (req, res, next) => teamController.invite(req, res, next),
+  inviteHandler,
 );
 
 teamRouter.get(

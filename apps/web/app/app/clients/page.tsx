@@ -1,9 +1,12 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Check, Copy, Plus, Search, UserPlus } from 'lucide-react';
 import { api } from '../../../lib/api';
 import { useAuth } from '../../../lib/auth-context';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
 
 type Client = { id: string; companyName: string; contactName: string; email: string; activeProjectsCount?: number };
 
@@ -15,6 +18,11 @@ export default function ClientsPage() {
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
   const [form, setForm] = useState({ companyName: '', contactName: '', email: '', phone: '' });
+  const [inviteTarget, setInviteTarget] = useState<Client | null>(null);
+  const [portalEmail, setPortalEmail] = useState('');
+  const [portalName, setPortalName] = useState('');
+  const [portalAcceptLink, setPortalAcceptLink] = useState('');
+  const [portalLinkCopied, setPortalLinkCopied] = useState(false);
   const readOnly = Boolean(support?.inSupportMode || support?.isSupportMode);
   const canCreate = user?.role === 'AGENCY_ADMIN' && !readOnly;
 
@@ -40,6 +48,35 @@ export default function ClientsPage() {
     }
   }
 
+  async function invitePortalUser(event: FormEvent) {
+    event.preventDefault();
+    if (!inviteTarget) return;
+    setBusy(true);
+    setError('');
+    try {
+      const response = await api.post<{ data: { acceptLink: string } }>(`/api/v1/clients/${inviteTarget.id}/portal-users`, { email: portalEmail, name: portalName || undefined });
+      setPortalAcceptLink(`${window.location.origin}${response.data.acceptLink}`);
+      setPortalEmail('');
+      setPortalName('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to invite this portal user.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function copyPortalLink() {
+    await navigator.clipboard.writeText(portalAcceptLink);
+    setPortalLinkCopied(true);
+  }
+
+  function closeInviteDialog(open: boolean) {
+    if (open) return;
+    setInviteTarget(null);
+    setPortalAcceptLink('');
+    setPortalLinkCopied(false);
+  }
+
   return (
     <div className="space-y-7">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -60,9 +97,19 @@ export default function ClientsPage() {
 
       {loading ? <p className="py-8 text-sm text-muted-foreground">Loading clients…</p> : clients.length === 0 ? <p className="surface-card p-8 text-center text-sm text-muted-foreground">No clients found.</p> : (
         <div className="surface-card divide-y divide-border px-5">
-          {clients.map((client) => <div key={client.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div><p className="font-semibold text-white">{client.companyName}</p><p className="mt-1 text-xs text-muted-foreground">{client.contactName} · {client.email}</p></div><p className="text-xs text-muted-foreground">{client.activeProjectsCount ?? 0} active projects</p></div>)}
+          {clients.map((client) => <div key={client.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div><p className="font-semibold text-white">{client.companyName}</p><p className="mt-1 text-xs text-muted-foreground">{client.contactName} · {client.email}</p></div><div className="flex items-center gap-4"><p className="text-xs text-muted-foreground">{client.activeProjectsCount ?? 0} active projects</p>{canCreate && <Button type="button" variant="outline" size="sm" onClick={() => { setInviteTarget(client); setError(''); }}><UserPlus className="mr-2 h-4 w-4" />Invite portal user</Button>}</div></div>)}
         </div>
       )}
+      <Dialog open={Boolean(inviteTarget)} onOpenChange={closeInviteDialog}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Invite portal user</DialogTitle><DialogDescription>Invite someone from {inviteTarget?.companyName} to access this client’s portal.</DialogDescription></DialogHeader>
+          {!portalAcceptLink ? <form id="portal-invite-form" onSubmit={(event) => void invitePortalUser(event)} className="space-y-3">
+            <label className="block space-y-1 text-xs text-muted-foreground">Name <Input value={portalName} onChange={(event) => setPortalName(event.target.value)} autoComplete="name" /></label>
+            <label className="block space-y-1 text-xs text-muted-foreground">Email <Input required type="email" value={portalEmail} onChange={(event) => setPortalEmail(event.target.value)} autoComplete="email" /></label>
+          </form> : <div className="space-y-3"><p className="text-sm text-emerald-800">Invitation created. Share this single-use link:</p><div className="flex gap-2"><Input readOnly aria-label="Portal invitation link" value={portalAcceptLink} className="min-w-0" /><Button type="button" variant="outline" onClick={() => void copyPortalLink()} aria-label="Copy invitation link">{portalLinkCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}</Button></div></div>}
+          <DialogFooter>{!portalAcceptLink ? <><Button type="button" variant="outline" onClick={() => closeInviteDialog(false)}>Cancel</Button><Button type="submit" form="portal-invite-form" disabled={busy}>{busy ? 'Creating…' : 'Create invite'}</Button></> : <Button type="button" variant="outline" onClick={() => closeInviteDialog(false)}>Done</Button>}</DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -38,23 +38,25 @@ Only fully implemented and verified features are documented below:
 - **Platform Audit Trail:** Centralized immutable activity log capturing cross-tenant operational events (`agency.suspended`, `agency.activated`, `support.entered`, `support.exited`).
 
 ### Agency Workspace (`/app`)
-- **Executive Dashboard:** High-level metrics showing active client engagements, project progress distribution, open feedback items, and recent team activity.
+- **Executive Dashboard:** High-level metrics showing active client engagements, project progress distribution, open feedback items, recent team activity, and up to eight overdue or next-14-day task and milestone deadlines.
 - **Client Directory:** Add, update, and search client organizations with primary contact details, email addresses, and associated project lists.
 - **Project Management:** Create and configure client projects, allocate project managers, define budgets and delivery timelines, and assign team members.
 - **Task Workflows & Milestones:** Structured task tracking supporting status states (`TODO`, `IN_PROGRESS`, `IN_REVIEW`, `DONE`, `CANCELLED`), priority levels, due date tracking, and milestone deliverables with client approval gates.
-- **My Work Queue:** Dedicated personalized workspace for agency members to review their assigned tasks across all assigned projects.
+- **My Work Queue:** Dedicated personalized workspace for reviewing assigned open tasks grouped into Overdue, Due this week, and Other open.
+- **Agency Activity Feed:** Paginated agency activity feed, scoped to assigned projects for members.
 - **Meeting Logs & Notes:** Record client meetings, store discussion notes, and toggle client visibility flags (`visible_to_client`).
 - **AI Meeting Summarization & Task Extraction:** Claude-powered meeting transcription processor that summarizes discussions, lists key decisions, extracts action items with due dates, and suggests assignees.
-- **Secure File Storage:** Project document repository supporting drag-and-drop file uploads (up to 10 MB with MIME verification), client visibility toggles, and streamed downloads.
-- **Client Feedback Loop:** Internal and external threaded feedback mechanism allowing review and resolution of client requests and comments.
-- **Team Management:** Invite agency members, assign roles (`AGENCY_ADMIN` vs. `AGENCY_MEMBER`), and manage member project assignments.
+- **Secure File Storage:** Project document repository supporting uploads up to 10 MB, magic-byte checks for PDF/PNG/JPEG/DOCX/XLSX, null-byte rejection for plain text/CSV, client visibility toggles, and streamed downloads.
+- **Client Feedback Loop:** Agency-wide threaded feedback inbox with status filtering, status changes, and replies, scoped to agency and member project access.
+- **Team Management:** Admin-only team screen to invite agency members with copyable accept links, review pending invitations, change roles, and confirm deactivation.
 
 ### Client Portal (`/portal`)
-- **Client Overview Dashboard:** High-level view showing active projects, overall deliverable completion, and upcoming milestone dates.
+- **Client Overview Dashboard:** High-level view showing active projects, overall deliverable completion, upcoming milestone dates, and an attention banner when approvals or feedback replies are pending.
+- **Milestone Client Approval:** Clients can approve pending milestones or request changes with a comment; decisions are recorded in the visible activity log.
 - **Project Progress Tracker:** Transparent deliverable progress visualization calculated dynamically as `DONE / (all - CANCELLED)`.
 - **Shared Meeting Records:** Access minutes and decisions for meetings marked with `visible_to_client = true`.
 - **Shared File Repository:** Download project deliverables, creative assets, and documentation explicitly shared by the agency.
-- **Feedback & Revision Submission:** Direct channel for clients to submit questions, feedback, or revision requests on their projects.
+- **Feedback & Revision Submission:** Direct channel for clients to submit questions, feedback, or revision requests and follow threaded conversations across their projects.
 
 ---
 
@@ -167,10 +169,10 @@ All 12 isolation scenarios defined in `docs/02_ACCESS_AND_TENANCY.md` are backed
 
 ### Automated Test Run Summary
 ```
-Test Files  17 passed (17)
-Tests       187 passed (187)
+Test Files  22 passed (22)
+Tests       211 passed (211)
 ```
-> **Mutation Check Verification:** Mutation checks were conducted across all critical security guards (such as disabling the `loadAgencyStatus` middleware, removing `where: { agencyId }` injection, and bypassing the support read-only check). In every instance, the test suite immediately caught the regression and failed.
+> **Mutation Check Verification:** Focused mutation checks confirmed that the milestone client filter, dashboard deadline agency filter, agency/portal feedback filters, activity agency filter, and upload content validation each cause their HTTP test to fail when removed.
 
 ---
 
@@ -314,6 +316,6 @@ Tests       187 passed (187)
 ## 12. Known Limitations & Next Steps
 
 1. **File Storage Infrastructure:** Uploads are currently saved to persistent local disk storage on the server volume. While robust for single-instance deployments, horizontal multi-instance scaling will require migrating the `StorageService` interface to Amazon S3 or Cloudflare R2.
-2. **Email Delivery Provider:** Invitations currently generate copyable onboarding URLs and log to server output. Production rollout will introduce transactional email providers (Resend, SendGrid, or AWS SES).
-3. **Real-Time Synchronisation:** Client interfaces currently leverage SWR polling and revalidation on window focus. Future iterations will incorporate Server-Sent Events (SSE) or WebSockets for instant task board updates and comment threads.
+2. **Email Delivery Provider:** Invitations return a copyable onboarding URL, but automatic transactional email is not configured. Production rollout can introduce a provider such as Resend, SendGrid, or AWS SES.
+3. **Real-Time Synchronisation:** Screens fetch current data on load and after user actions; there are no server-pushed updates. Future iterations can add Server-Sent Events (SSE) or WebSockets for instant task board updates and comment threads.
 4. **Single-Agency User Association:** Users are currently assigned to exactly one agency tenant. Multi-tenant agency switching for freelance contractors will be implemented in future phases.

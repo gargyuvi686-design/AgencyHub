@@ -22,6 +22,16 @@ export interface DashboardStats {
     pending: number;
   };
   recentActivity: any[];
+  upcomingDeadlines: Array<{
+    id: string;
+    title: string;
+    dueDate: Date;
+    projectId: string;
+    projectName: string;
+    kind: 'task' | 'milestone';
+    priority: string | null;
+    assignee: { id: string; name: string } | null;
+  }>;
 }
 
 export interface MyWorkStats {
@@ -36,6 +46,17 @@ export interface MyWorkStats {
     byStatus: Record<string, number>;
   };
   upcomingMeetings: any[];
+  openTasks: Array<{
+    id: string;
+    title: string;
+    status: string;
+    priority: string;
+    dueDate: Date | null;
+    projectId: string;
+    projectName: string;
+    assigneeId: string | null;
+    assignee: { id: string; name: string } | null;
+  }>;
 }
 
 export class DashboardRepository extends BaseRepository {
@@ -128,6 +149,39 @@ export class DashboardRepository extends BaseRepository {
       },
     });
 
+    const in14Days = new Date(startOfToday.getTime() + 14 * 24 * 60 * 60 * 1000);
+    const deadlineScope = {
+      agencyId: this.agencyId,
+      ...(projectIds !== undefined ? { projectId: { in: projectIds } } : {}),
+      dueDate: { lte: in14Days },
+    };
+    const [taskDeadlines, milestoneDeadlines] = await Promise.all([
+      this.db.task.findMany({
+        where: { ...deadlineScope, status: { notIn: [TaskStatus.DONE, TaskStatus.CANCELLED] } },
+        select: { id: true, title: true, dueDate: true, projectId: true, priority: true, assignee: { select: { id: true, name: true } }, project: { select: { name: true } } },
+      }),
+      this.db.milestone.findMany({
+        where: { ...deadlineScope, status: { not: 'DONE' } },
+        select: { id: true, title: true, dueDate: true, projectId: true, project: { select: { name: true } } },
+        orderBy: { dueDate: 'asc' },
+        take: 8,
+      }),
+    ]);
+    const upcomingDeadlines = [
+      ...taskDeadlines.filter((item) => item.dueDate).map((item) => ({
+        id: item.id, title: item.title, dueDate: item.dueDate!, projectId: item.projectId,
+        projectName: item.project.name, kind: 'task' as const, priority: item.priority, assignee: item.assignee,
+      })),
+      ...milestoneDeadlines.filter((item) => item.dueDate).map((item) => ({
+        id: item.id, title: item.title, dueDate: item.dueDate!, projectId: item.projectId,
+        projectName: item.project.name, kind: 'milestone' as const, priority: null, assignee: null,
+      })),
+    ].sort((left, right) => {
+      const rank: Record<string, number> = { URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+      const priorityDifference = (rank[right.priority ?? ''] ?? 0) - (rank[left.priority ?? ''] ?? 0);
+      return priorityDifference || left.dueDate.getTime() - right.dueDate.getTime();
+    }).slice(0, 8);
+
     // Client and team stats (admin only, members get zero)
     let totalClients = 0;
     let totalTeamMembers = 0;
@@ -166,6 +220,7 @@ export class DashboardRepository extends BaseRepository {
       teamMembers: { total: totalTeamMembers },
       feedback: { pending: pendingFeedbackCount },
       recentActivity,
+      upcomingDeadlines,
     };
   }
 
@@ -256,6 +311,32 @@ export class DashboardRepository extends BaseRepository {
       },
     });
 
+    const openTasks = await this.db.task.findMany({
+      where: {
+        agencyId: this.agencyId,
+        assigneeId: userId,
+        status: { notIn: [TaskStatus.DONE, TaskStatus.CANCELLED] },
+      },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        priority: true,
+        dueDate: true,
+        assigneeId: true,
+        assignee: { select: { id: true, name: true } },
+        projectId: true,
+        project: { select: { name: true } },
+      },
+    });
+    const priorityRank: Record<string, number> = { URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+    openTasks.sort((left, right) => {
+      const priorityDifference = (priorityRank[right.priority] ?? 0) - (priorityRank[left.priority] ?? 0);
+      const leftDueDate = left.dueDate ? left.dueDate.getTime() : Number.POSITIVE_INFINITY;
+      const rightDueDate = right.dueDate ? right.dueDate.getTime() : Number.POSITIVE_INFINITY;
+      return priorityDifference || leftDueDate - rightDueDate;
+    });
+
     return {
       assignedTasks: {
         total: totalAssigned,
@@ -268,6 +349,7 @@ export class DashboardRepository extends BaseRepository {
         byStatus: managedByStatus,
       },
       upcomingMeetings,
+      openTasks: openTasks.map(({ project, ...task }) => ({ ...task, projectName: project.name })),
     };
   }
 }
